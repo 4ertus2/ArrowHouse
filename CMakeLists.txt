@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(arrow_house)
+project(ArrowHouse)
 enable_testing()
 
 if("${CMAKE_BUILD_TYPE}" STREQUAL "")
@@ -33,9 +33,10 @@ add_subdirectory(contrib)
 add_subdirectory(Common)
 add_subdirectory(Columns)
 add_subdirectory(DataStreams)
+add_subdirectory(YdbModes)
 
 add_library(
-  arrow_house STATIC
+  Agg STATIC
   AggregateFunctions/IAggregateFunction.cpp
   Aggregator.cpp
 
@@ -43,11 +44,8 @@ add_library(
   base/common/mremap.cpp
 )
 
-#contrib/cityhash-1.0.2
-#include base
-
 add_executable(ut_aggregator ut_aggregator.cpp)
-target_link_libraries(ut_aggregator arrow_house Common Columns DataStreams
+target_link_libraries(ut_aggregator Agg Common Columns DataStreams
   Arrow::arrow_static
   ch_contrib::cityhash
   ch_contrib::gtest
