@@ -3,6 +3,11 @@
 #include <arrow/api.h>
 #include "switch_type.h"
 
+namespace CH
+{
+struct SortDescription;
+}
+
 namespace NArrow
 {
 
@@ -18,15 +23,6 @@ std::shared_ptr<arrow::RecordBatch> ExtractColumns(
 
 
 std::shared_ptr<arrow::RecordBatch> ToBatch(const std::shared_ptr<arrow::Table> & combinedTable, const bool combine = false);
-#if 0
-std::shared_ptr<arrow::RecordBatch> CombineSortedBatches(
-    const std::vector<std::shared_ptr<arrow::RecordBatch>> & batches, const std::shared_ptr<SortDescription> & description);
-std::vector<std::shared_ptr<arrow::RecordBatch>> MergeSortedBatches(
-    const std::vector<std::shared_ptr<arrow::RecordBatch>> & batches,
-    const std::shared_ptr<SortDescription> & description,
-    size_t maxBatchRows);
-#endif
-
 std::unique_ptr<arrow::ArrayBuilder> MakeBuilder(const std::shared_ptr<arrow::Field> & field);
 
 std::vector<std::unique_ptr<arrow::ArrayBuilder>>
@@ -35,16 +31,6 @@ std::vector<std::shared_ptr<arrow::Array>> Finish(std::vector<std::unique_ptr<ar
 
 std::shared_ptr<arrow::UInt64Array> MakeUI64Array(uint64_t value, int64_t size);
 bool ReserveData(arrow::ArrayBuilder & builder, const size_t size);
-bool MergeBatchColumns(
-    const std::vector<std::shared_ptr<arrow::RecordBatch>> & batches,
-    std::shared_ptr<arrow::RecordBatch> & result,
-    const std::vector<std::string> & columnsOrder = {},
-    const bool orderFieldsAreNecessary = true);
-bool MergeBatchColumns(
-    const std::vector<std::shared_ptr<arrow::Table>> & batches,
-    std::shared_ptr<arrow::Table> & result,
-    const std::vector<std::string> & columnsOrder = {},
-    const bool orderFieldsAreNecessary = true);
 
 std::shared_ptr<arrow::UInt64Array>
 MakeSortPermutation(const std::shared_ptr<arrow::RecordBatch> & batch, const std::shared_ptr<arrow::Schema> & sortingKey);
@@ -56,5 +42,23 @@ bool IsSortedAndUnique(
 uint64_t GetBatchDataSize(const std::shared_ptr<arrow::RecordBatch> & batch);
 // Return size in bytes *not* including size of bitmap mask
 uint64_t GetArrayDataSize(const std::shared_ptr<arrow::Array> & column);
+
+std::shared_ptr<arrow::RecordBatch> CombineSortedBatches(
+    const std::vector<std::shared_ptr<arrow::RecordBatch>> & batches, const std::shared_ptr<CH::SortDescription> & description);
+std::vector<std::shared_ptr<arrow::RecordBatch>> MergeSortedBatches(
+    const std::vector<std::shared_ptr<arrow::RecordBatch>> & batches,
+    const std::shared_ptr<CH::SortDescription> & description,
+    size_t maxBatchRows);
+
+bool MergeBatchColumns(
+    const std::vector<std::shared_ptr<arrow::RecordBatch>> & batches,
+    std::shared_ptr<arrow::RecordBatch> & result,
+    const std::vector<std::string> & columnsOrder = {},
+    const bool orderFieldsAreNecessary = true);
+bool MergeBatchColumns(
+    const std::vector<std::shared_ptr<arrow::Table>> & batches,
+    std::shared_ptr<arrow::Table> & result,
+    const std::vector<std::string> & columnsOrder = {},
+    const bool orderFieldsAreNecessary = true);
 
 }

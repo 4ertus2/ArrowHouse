@@ -1,6 +1,11 @@
 #include "helpers.h"
+#include "DataStreams/IBlockStream_fwd.h"
+#include "DataStreams/OneBlockInputStream.h"
+#include "MergingSortedInputStream.h"
+#include "SortCursor.h"
 #include "switch_type.h"
 
+#include <limits>
 #include <memory>
 #include <arrow/api.h>
 #include <arrow/compute/api.h>
@@ -9,7 +14,9 @@
 namespace NArrow
 {
 
+using CH::BlockInputStreams;
 using CH::RawReplaceKey;
+using CH::SortDescription;
 
 namespace
 {
@@ -97,43 +104,6 @@ std::shared_ptr<arrow::RecordBatch> ToBatch(const std::shared_ptr<arrow::Table> 
         columns.push_back(col->chunk(0));
     return arrow::RecordBatch::Make(table->schema(), table->num_rows(), columns);
 }
-
-#if 0
-std::shared_ptr<arrow::RecordBatch> CombineSortedBatches(const std::vector<std::shared_ptr<arrow::RecordBatch>>& batches,
-                                                         const std::shared_ptr<SortDescription>& description) {
-    std::vector<NArrow::IInputStream::TPtr> streams;
-    for (auto& batch : batches) {
-        streams.push_back(std::make_shared<DB::OneBatchInputStream>(batch));
-    }
-
-    auto mergeStream = std::make_shared<NArrow::TMergingSortedInputStream>(streams, description, Max<uint64_t>());
-    std::shared_ptr<arrow::RecordBatch> batch = mergeStream->read();
-    return batch;
-}
-
-std::vector<std::shared_ptr<arrow::RecordBatch>> MergeSortedBatches(const std::vector<std::shared_ptr<arrow::RecordBatch>>& batches,
-                                                                    const std::shared_ptr<SortDescription>& description,
-                                                                    size_t maxBatchRows) {
-    uint64_t numRows = 0;
-    std::vector<NArrow::IInputStream::TPtr> streams;
-    streams.reserve(batches.size());
-    for (auto& batch : batches) {
-        if (batch->num_rows()) {
-            numRows += batch->num_rows();
-            streams.push_back(std::make_shared<DB::OneBatchInputStream>(batch));
-        }
-    }
-
-    std::vector<std::shared_ptr<arrow::RecordBatch>> out;
-    out.reserve(numRows / maxBatchRows + 1);
-
-    auto mergeStream = std::make_shared<DB::MergingSortedInputStream>(streams, description, maxBatchRows);
-    while (std::shared_ptr<arrow::RecordBatch> batch = mergeStream->read()) {
-        out.push_back(batch);
-    }
-    return out;
-}
-#endif
 
 // Check if the permutation doesn't reorder anything
 bool IsTrivial(const arrow::UInt64Array & permutation, const uint64_t originalLength)
@@ -382,6 +352,44 @@ bool ReserveData(arrow::ArrayBuilder & builder, const size_t size)
         result = bBuilder.ReserveData(size);
     }
     return result.ok();
+}
+
+std::shared_ptr<arrow::RecordBatch>
+CombineSortedBatches(const std::vector<std::shared_ptr<arrow::RecordBatch>> & batches, const std::shared_ptr<SortDescription> & description)
+{
+    BlockInputStreams streams;
+    for (auto & batch : batches)
+        streams.push_back(std::make_shared<CH::OneBlockInputStream>(batch));
+
+    auto mergeStream = std::make_shared<CH::MergingSortedInputStream>(streams, description, std::numeric_limits<uint64_t>::max());
+    std::shared_ptr<arrow::RecordBatch> batch = mergeStream->read();
+    return batch;
+}
+
+std::vector<std::shared_ptr<arrow::RecordBatch>> MergeSortedBatches(
+    const std::vector<std::shared_ptr<arrow::RecordBatch>> & batches,
+    const std::shared_ptr<SortDescription> & description,
+    size_t max_batch_rows)
+{
+    uint64_t num_rows = 0;
+    BlockInputStreams streams;
+    streams.reserve(batches.size());
+    for (auto & batch : batches)
+    {
+        if (batch->num_rows())
+        {
+            num_rows += batch->num_rows();
+            streams.push_back(std::make_shared<CH::OneBlockInputStream>(batch));
+        }
+    }
+
+    std::vector<std::shared_ptr<arrow::RecordBatch>> out;
+    out.reserve(num_rows / max_batch_rows + 1);
+
+    auto merge_stream = std::make_shared<CH::MergingSortedInputStream>(streams, description, max_batch_rows);
+    while (std::shared_ptr<arrow::RecordBatch> batch = merge_stream->read())
+        out.push_back(batch);
+    return out;
 }
 
 template <class TData, class TColumn, class TBuilder>
