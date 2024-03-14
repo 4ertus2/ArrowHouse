@@ -3,15 +3,29 @@
 #include "MergingSortedInputStream.h"
 #include "helpers.h"
 
+#include <cstdlib>
+#include <unordered_map>
 #include <arrow/api.h>
 #include <arrow/compute/api.h>
 #include <gtest/gtest.h>
-#include <unordered_map>
 
 using namespace CH;
 
 namespace
 {
+
+template <typename T>
+void ShuffleVector(std::vector<T> & vec)
+{
+    if (vec.size() > RAND_MAX)
+        throw std::runtime_error("out of range");
+
+    for (size_t i = 0; i < vec.size() - 1; ++i)
+    {
+        int pos = i + rand() % (vec.size() - i);
+        std::swap(vec[i], vec[pos]);
+    }
+}
 
 struct DataRow
 {
@@ -280,9 +294,8 @@ std::shared_ptr<arrow::Table> Shuffle(std::shared_ptr<arrow::Table> table)
     std::vector<arrow::UInt64Builder::value_type> shuffle(1000);
     for (int i = 0; i < 1000; ++i)
         shuffle[i] = i;
-#if 0 // FIXME
-    ShuffleRange(shuffle);
-#endif
+    ShuffleVector(shuffle);
+
     arrow::UInt64Builder builder;
     EXPECT_TRUE(builder.AppendValues(&shuffle[0], shuffle.size()).ok());
 
