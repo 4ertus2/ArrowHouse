@@ -1,7 +1,7 @@
-#include "DataStreams/IBlockStream_fwd.h"
-#include "DataStreams/OneBlockInputStream.h"
-#include "MergingSortedInputStream.h"
-#include "helpers.h"
+#include <DataStreams/IBlockStream_fwd.h>
+#include <DataStreams/OneBlockInputStream.h>
+#include <YdbModes/MergingSortedInputStream.h>
+#include <YdbModes/helpers.h>
 
 #include <cstdlib>
 #include <unordered_map>

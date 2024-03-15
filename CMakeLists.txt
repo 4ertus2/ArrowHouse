@@ -6,10 +6,11 @@ if("${CMAKE_BUILD_TYPE}" STREQUAL "")
   set(CMAKE_BUILD_TYPE "RelWithDebInfo")
 endif()
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 
 set(PEDANTIC "-Werror -Wall -Wextra -Wshadow -Wunreachable-code -Wpointer-arith")
-set(IGNORES "-Wno-ignored-attributes -Wno-unused-parameter -Wno-missing-field-initializers -Wno-shadow")
+set(IGNORES "-Wno-ignored-attributes -Wno-unused-parameter -Wno-missing-field-initializers -Wno-shadow \
+  -Wno-deprecated-declarations")
 set(MUTED_ERRORS "")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pipe ${PEDANTIC} ${MUTED_ERRORS} ${IGNORES}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe ${PEDANTIC} ${MUTED_ERRORS} ${IGNORES}")
@@ -33,6 +34,7 @@ add_subdirectory(contrib)
 add_subdirectory(Common)
 add_subdirectory(Columns)
 add_subdirectory(DataStreams)
+add_subdirectory(Functions)
 add_subdirectory(YdbModes)
 
 add_library(
@@ -44,7 +46,7 @@ add_library(
   base/common/mremap.cpp
 )
 
-add_executable(ut_aggregator ut_aggregator.cpp)
+add_executable(ut_aggregator tests/ut_aggregator.cpp)
 target_link_libraries(ut_aggregator Agg Common Columns DataStreams
   Arrow::arrow_static
   ch_contrib::cityhash

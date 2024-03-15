@@ -1,3 +1,9 @@
 [submodule "contrib/googletest"]
 	path = contrib/googletest
 	url = https://github.com/google/googletest
+[submodule "contrib/xxHash"]
+	path = contrib/xxHash
+	url = https://github.com/Cyan4973/xxHash
+[submodule "contrib/wyhash"]
+	path = contrib/wyhash
+	url = https://github.com/wangyi-fudan/wyhash

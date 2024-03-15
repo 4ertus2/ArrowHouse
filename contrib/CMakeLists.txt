@@ -30,5 +30,7 @@ function(add_contrib cmake_folder)
     add_subdirectory (${cmake_folder})
 endfunction()
 
+add_contrib (wyhash-cmake wyhash)
 add_contrib (cityhash102)
+add_contrib (xxHash-cmake xxHash)
 add_contrib (googletest-cmake googletest)

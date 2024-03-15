@@ -4,7 +4,7 @@ add_library(
     helpers.cpp
 )
 
-add_executable(ut_ydb_modes ut_modes.cpp)
+add_executable(ut_ydb_modes tests/ut_modes.cpp)
 target_link_libraries(ut_ydb_modes YdbModes Common Columns DataStreams
   Arrow::arrow_static
   ch_contrib::cityhash
