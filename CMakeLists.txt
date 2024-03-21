@@ -53,6 +53,10 @@ target_link_libraries(arrowhouse INTERFACE
   Agg Common Columns DataStreams
   ch_contrib::cityhash
 )
+target_include_directories(arrowhouse SYSTEM INTERFACE
+  ${ArrowHouse_SOURCE_DIR}
+  ${ArrowHouse_SOURCE_DIR}/base
+)
 
 add_executable(ut_aggregator tests/ut_aggregator.cpp)
 target_link_libraries(ut_aggregator arrowhouse Arrow::arrow_static ch_contrib::gtest)
