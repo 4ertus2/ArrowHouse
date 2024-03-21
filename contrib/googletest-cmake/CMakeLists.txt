@@ -1,4 +1,4 @@
-set (SRC_DIR "${CMAKE_SOURCE_DIR}/contrib/googletest")
+set (SRC_DIR "${ArrowHouse_SOURCE_DIR}/contrib/googletest")
 
 add_library(_gtest "${SRC_DIR}/googletest/src/gtest-all.cc")
 set_target_properties(_gtest PROPERTIES VERSION "1.0.0")

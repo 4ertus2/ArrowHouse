@@ -1,4 +1,4 @@
-set (LIBRARY_DIR "${CMAKE_SOURCE_DIR}/contrib/xxHash")
+set (LIBRARY_DIR "${ArrowHouse_SOURCE_DIR}/contrib/xxHash")
 set (SRCS
     "${LIBRARY_DIR}/xxhash.c"
 )

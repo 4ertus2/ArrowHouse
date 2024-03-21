@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.20)
 project(ArrowHouse)
 enable_testing()
 
+set(ArrowHouse_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+
 if("${CMAKE_BUILD_TYPE}" STREQUAL "")
   set(CMAKE_BUILD_TYPE "RelWithDebInfo")
 endif()
@@ -15,7 +17,7 @@ set(MUTED_ERRORS "")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pipe ${PEDANTIC} ${MUTED_ERRORS} ${IGNORES}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe ${PEDANTIC} ${MUTED_ERRORS} ${IGNORES}")
 
-find_package(Arrow REQUIRED PATHS ${DEPS_PATH})
+find_package(Arrow REQUIRED PATHS ${ArrowHouse_DEPS_PATH})
 find_package(GTest)
 
 if (NOT GTest_FOUND)
@@ -46,10 +48,12 @@ add_library(
   base/common/mremap.cpp
 )
 
-add_executable(ut_aggregator tests/ut_aggregator.cpp)
-target_link_libraries(ut_aggregator Agg Common Columns DataStreams
-  Arrow::arrow_static
+add_library(arrowhouse INTERFACE)
+target_link_libraries(arrowhouse INTERFACE
+  Agg Common Columns DataStreams
   ch_contrib::cityhash
-  ch_contrib::gtest
 )
+
+add_executable(ut_aggregator tests/ut_aggregator.cpp)
+target_link_libraries(ut_aggregator arrowhouse Arrow::arrow_static ch_contrib::gtest)
 add_test(NAME aggregator COMMAND ut_aggregator)
