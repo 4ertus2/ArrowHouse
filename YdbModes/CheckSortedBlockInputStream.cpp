@@ -1,4 +1,4 @@
-#include <DataStreams/CheckSortedBlockInputStream.h>
+#include <YdbModes/CheckSortedBlockInputStream.h>
 #include <YdbModes/helpers.h>
 
 namespace CH

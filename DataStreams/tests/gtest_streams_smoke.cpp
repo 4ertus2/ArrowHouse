@@ -1,4 +1,4 @@
-#include <DataStreams/CheckSortedBlockInputStream.h>
+#include <YdbModes/CheckSortedBlockInputStream.h>
 #include <DataStreams/ConcatBlockInputStream.h>
 #include <DataStreams/OneBlockInputStream.h>
 #include <YdbModes/helpers.h>
@@ -51,7 +51,6 @@ TEST(CheckSortedBlockInputStream, StreamSmoke)
 
     SortDescription sort_descr;
     sort_descr.sorting_key = batch->schema();
-    sort_descr.replace_key = batch->schema();
     sort_descr.directions = {1};
 
     auto check = std::make_shared<CheckSortedBlockInputStream>(one, sort_descr);
