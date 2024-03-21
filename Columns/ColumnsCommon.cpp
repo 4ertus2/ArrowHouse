@@ -14,7 +14,7 @@
 namespace CH
 {
 
-#if defined(__SSE2__) && defined(__POPCNT__)
+#if defined(__SSE2__)
 /// Transform 64-byte mask to 64-bit mask.
 static UInt64 toBits64(const Int8 * bytes64)
 {
