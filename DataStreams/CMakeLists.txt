@@ -4,3 +4,11 @@ add_library(
     IBlockInputStream.cpp
     MergingAggregatedBlockInputStream.cpp
 )
+
+add_executable(ut_streams_smoke tests/gtest_streams_smoke.cpp)
+target_link_libraries(ut_streams_smoke
+    DataStreams YdbModes
+    Arrow::arrow_static
+    ch_contrib::gtest
+)
+add_test(NAME streams_smoke COMMAND ut_streams_smoke)
