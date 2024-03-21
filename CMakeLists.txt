@@ -21,15 +21,15 @@ find_package(Arrow REQUIRED PATHS ${ArrowHouse_DEPS_PATH})
 find_package(GTest)
 
 if (NOT GTest_FOUND)
-  set(GTEST_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/contrib/googletest/googletest/include)
+  set(GTEST_INCLUDE_DIRS ${ArrowHouse_SOURCE_DIR}/contrib/googletest/googletest/include)
 endif()
 
 include_directories(
   ${ARROW_INCLUDE_DIR}
   ${GTEST_INCLUDE_DIRS}
-  ${CMAKE_SOURCE_DIR}
-  ${CMAKE_SOURCE_DIR}/base
-  ${CMAKE_SOURCE_DIR}/contrib/cityhash102/include
+  ${ArrowHouse_SOURCE_DIR}
+  ${ArrowHouse_SOURCE_DIR}/base
+  ${ArrowHouse_SOURCE_DIR}/contrib/cityhash102/include
 )
 
 add_subdirectory(contrib)
