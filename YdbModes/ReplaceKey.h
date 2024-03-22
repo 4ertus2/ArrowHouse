@@ -258,9 +258,8 @@ private:
     template <typename T>
     static std::partial_ordering CompareValue(const T & x, const T & y, bool xIsNull, bool yIsNull)
     {
-        // TODO: std::partial_ordering::unordered for both nulls?
         if (xIsNull)
-            return std::partial_ordering::less;
+            return yIsNull ? std::partial_ordering::equivalent : std::partial_ordering::less;
         if (yIsNull)
             return std::partial_ordering::greater;
         return CompareValueNotNull(x, y);
