@@ -9,7 +9,10 @@ Block SortingBlockInputStream::readImpl()
 {
     Block block = children.back()->read();
 
-    auto permutation = CHY::MakeSortPermutation(block, description->sorting_key);
+    if (!block || block->num_rows() == 0)
+        return block;
+
+    auto permutation = CHY::MakeSortPermutation(block, description.sorting_key);
     if (CHY::IsTrivialPermutation(*permutation))
         return block;
 

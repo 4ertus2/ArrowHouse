@@ -430,7 +430,7 @@ TEST(SortingBlockInputStream, YdbModes)
     auto one = std::make_shared<OneBlockInputStream>(batch);
 
     auto descr = std::make_shared<CHY::SortDescription>(batch->schema());
-    auto stream = std::make_shared<CHY::SortingBlockInputStream>(one, descr);
+    auto stream = std::make_shared<CHY::SortingBlockInputStream>(one, *descr);
     auto sorted = stream->read();
     EXPECT_EQ(sorted->num_rows(), 1000);
     EXPECT_TRUE(CheckSorted1000(sorted));

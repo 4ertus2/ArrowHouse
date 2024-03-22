@@ -12,10 +12,10 @@ using namespace CH;
 class SortingBlockInputStream : public IBlockInputStream
 {
 public:
-    SortingBlockInputStream(const BlockInputStreamPtr & input_, std::shared_ptr<SortDescription> description_)
+    SortingBlockInputStream(const BlockInputStreamPtr & input_, const SortDescription & description_)
         : description(description_)
     {
-        for (auto & dir : description->directions)
+        for (auto & dir : description.directions)
             if (dir != 1)
                 throw std::runtime_error("sort directions are not supported");
         children.push_back(input_);
@@ -28,7 +28,7 @@ protected:
     Block readImpl() override;
 
 private:
-    std::shared_ptr<SortDescription> description;
+    SortDescription description;
 };
 
 }
