@@ -31,6 +31,7 @@ bool ReserveData(arrow::ArrayBuilder & builder, const size_t size);
 
 std::shared_ptr<arrow::UInt64Array>
 MakeSortPermutation(const std::shared_ptr<arrow::RecordBatch> & batch, const std::shared_ptr<arrow::Schema> & sortingKey);
+bool IsTrivialPermutation(const arrow::UInt64Array & permutation);
 bool IsSorted(const std::shared_ptr<arrow::RecordBatch> & batch, const std::shared_ptr<arrow::Schema> & sortingKey, bool desc = false);
 bool IsSortedAndUnique(
     const std::shared_ptr<arrow::RecordBatch> & batch, const std::shared_ptr<arrow::Schema> & sortingKey, bool desc = false);

@@ -104,10 +104,8 @@ std::shared_ptr<arrow::RecordBatch> ToBatch(const std::shared_ptr<arrow::Table> 
 }
 
 // Check if the permutation doesn't reorder anything
-bool IsTrivial(const arrow::UInt64Array & permutation, const uint64_t originalLength)
+bool IsTrivialPermutation(const arrow::UInt64Array & permutation)
 {
-    if ((uint64_t)permutation.length() != originalLength)
-        return false;
     for (int64_t i = 0; i < permutation.length(); ++i)
         if (permutation.Value(i) != (uint64_t)i)
             return false;

@@ -1,6 +1,7 @@
 #include <DataStreams/IBlockStream_fwd.h>
 #include <DataStreams/OneBlockInputStream.h>
 #include <YdbModes/MergingSortedInputStream.h>
+#include <YdbModes/SortingBlockInputStream.h>
 #include <YdbModes/helpers.h>
 
 #include <cstdlib>
@@ -414,6 +415,25 @@ TEST(SortWithCompositeKey, YdbModes)
 
     EXPECT_EQ(batch->num_rows(), 1000);
     EXPECT_TRUE(CheckSorted1000(batch));
+}
+
+TEST(SortingBlockInputStream, YdbModes)
+{
+    std::shared_ptr<arrow::Table> table = Shuffle(MakeTable1000());
+
+    // Table sort is not supported yet: we need not chunked arrays in MakeSortPermutation
+    std::shared_ptr<arrow::RecordBatch> batch = ExtractBatch(table);
+
+    EXPECT_EQ(batch->num_rows(), 1000);
+    EXPECT_TRUE(!CheckSorted1000(batch));
+
+    auto one = std::make_shared<OneBlockInputStream>(batch);
+
+    auto descr = std::make_shared<CHY::SortDescription>(batch->schema());
+    auto stream = std::make_shared<CHY::SortingBlockInputStream>(one, descr);
+    auto sorted = stream->read();
+    EXPECT_EQ(sorted->num_rows(), 1000);
+    EXPECT_TRUE(CheckSorted1000(sorted));
 }
 
 TEST(MergingSortedInputStream, YdbModes)
