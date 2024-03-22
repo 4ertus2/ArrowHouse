@@ -7,13 +7,14 @@ namespace CHY
 template <typename T, typename U>
 static std::partial_ordering compare(const T & left, const U & right, const SortDescription & sort_description)
 {
-    for (size_t i = 0; i < sort_description.directions.size(); ++i)
+    size_t num_fields = sort_description.sorting_key->num_fields();
+    for (size_t i = 0; i < num_fields; ++i)
     {
         std::partial_ordering cmp = left.CompareColumnValue(i, right, i);
-        if (std::is_neq(cmp)) {
-            if (sort_description.directions[i] < 0) {
+        if (std::is_neq(cmp))
+        {
+            if (i < sort_description.directions.size() && sort_description.directions[i] < 0)
                 return std::is_lt(cmp) ? std::partial_ordering::greater : std::partial_ordering::less;
-            }
             return cmp;
         }
     }
@@ -23,6 +24,10 @@ static std::partial_ordering compare(const T & left, const U & right, const Sort
 CheckSortedBlockInputStream::CheckSortedBlockInputStream(const BlockInputStreamPtr & input_, const SortDescription & sort_description_)
     : header(input_->getHeader()), sort_description(sort_description_)
 {
+    size_t num_fields = sort_description.sorting_key->num_fields();
+    if (sort_description.directions.size() > num_fields)
+        sort_description.directions.resize(num_fields);
+
     children.push_back(input_);
 }
 
