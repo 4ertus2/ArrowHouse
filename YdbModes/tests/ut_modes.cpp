@@ -320,7 +320,7 @@ std::shared_ptr<arrow::RecordBatch> ExtractBatch(std::shared_ptr<arrow::Table> t
 
 std::shared_ptr<arrow::RecordBatch> AddSnapColumn(const std::shared_ptr<arrow::RecordBatch> & batch, uint64_t snap)
 {
-    auto snapColumn = NArrow::MakeUI64Array(snap, batch->num_rows());
+    auto snapColumn = CHY::MakeUI64Array(snap, batch->num_rows());
     auto result = batch->AddColumn(batch->num_columns(), "snap", snapColumn);
     return *result;
 }
@@ -406,7 +406,7 @@ TEST(SortWithCompositeKey, YdbModes)
     EXPECT_EQ(batch->num_rows(), 1000);
     EXPECT_TRUE(!CheckSorted1000(batch));
 
-    auto sortPermutation = NArrow::MakeSortPermutation(batch, table->schema());
+    auto sortPermutation = CHY::MakeSortPermutation(batch, table->schema());
 
     auto res = arrow::compute::Take(batch, sortPermutation);
     EXPECT_TRUE(res.ok());
@@ -428,7 +428,7 @@ TEST(MergingSortedInputStream, YdbModes)
     batches.push_back(batch->Slice(500, 50)); // 500..550
     batches.push_back(batch->Slice(600, 1)); // 600..601
 
-    auto descr = std::make_shared<CH::SortDescription>(batch->schema());
+    auto descr = std::make_shared<CHY::SortDescription>(batch->schema());
     descr->not_null = true;
 
     std::vector<std::shared_ptr<arrow::RecordBatch>> sorted;
@@ -437,7 +437,7 @@ TEST(MergingSortedInputStream, YdbModes)
         for (auto & batch : batches)
             streams.push_back(std::make_shared<OneBlockInputStream>(batch));
 
-        BlockInputStreamPtr mergeStream = std::make_shared<CH::MergingSortedInputStream>(streams, descr, 500);
+        BlockInputStreamPtr mergeStream = std::make_shared<CHY::MergingSortedInputStream>(streams, descr, 500);
 
         while (auto batch = mergeStream->read())
             sorted.emplace_back(batch);
@@ -448,8 +448,8 @@ TEST(MergingSortedInputStream, YdbModes)
     EXPECT_EQ(sorted[1]->num_rows(), 251);
     EXPECT_TRUE(CheckSorted(sorted[0]));
     EXPECT_TRUE(CheckSorted(sorted[1]));
-    EXPECT_TRUE(NArrow::IsSorted(sorted[0], descr->sorting_key));
-    EXPECT_TRUE(NArrow::IsSorted(sorted[1], descr->sorting_key));
+    EXPECT_TRUE(CHY::IsSorted(sorted[0], descr->sorting_key));
+    EXPECT_TRUE(CHY::IsSorted(sorted[1], descr->sorting_key));
     EXPECT_TRUE(RestoreOne(sorted[0], 499) <= RestoreOne(sorted[1], 0));
 }
 
@@ -465,7 +465,7 @@ TEST(MergingSortedInputStreamReversed, YdbModes)
     batches.push_back(batch->Slice(500, 50)); // 500..550
     batches.push_back(batch->Slice(600, 1)); // 600..601
 
-    auto descr = std::make_shared<CH::SortDescription>(batch->schema());
+    auto descr = std::make_shared<CHY::SortDescription>(batch->schema());
     descr->not_null = true;
     descr->Inverse();
 
@@ -475,7 +475,7 @@ TEST(MergingSortedInputStreamReversed, YdbModes)
         for (auto & batch : batches)
             streams.push_back(std::make_shared<CH::OneBlockInputStream>(batch));
 
-        BlockInputStreamPtr mergeStream = std::make_shared<CH::MergingSortedInputStream>(streams, descr, 500);
+        BlockInputStreamPtr mergeStream = std::make_shared<CHY::MergingSortedInputStream>(streams, descr, 500);
 
         while (auto batch = mergeStream->read())
             sorted.emplace_back(batch);
@@ -486,8 +486,8 @@ TEST(MergingSortedInputStreamReversed, YdbModes)
     EXPECT_EQ(sorted[1]->num_rows(), 251);
     EXPECT_TRUE(CheckSorted(sorted[0], true));
     EXPECT_TRUE(CheckSorted(sorted[1], true));
-    EXPECT_TRUE(NArrow::IsSorted(sorted[0], descr->sorting_key, true));
-    EXPECT_TRUE(NArrow::IsSorted(sorted[1], descr->sorting_key, true));
+    EXPECT_TRUE(CHY::IsSorted(sorted[0], descr->sorting_key, true));
+    EXPECT_TRUE(CHY::IsSorted(sorted[1], descr->sorting_key, true));
     EXPECT_TRUE(RestoreOne(sorted[0], 499) >= RestoreOne(sorted[1], 0));
 }
 
@@ -505,7 +505,7 @@ TEST(MergingSortedInputStreamReplace, YdbModes)
     auto sortingKey = batches[0]->schema();
     auto replaceKey = batch->schema();
 
-    auto descr = std::make_shared<CH::SortDescription>(sortingKey, replaceKey);
+    auto descr = std::make_shared<CHY::SortDescription>(sortingKey, replaceKey);
     descr->directions.back() = -1; // greater snapshot first
     descr->not_null = true;
 
@@ -515,7 +515,7 @@ TEST(MergingSortedInputStreamReplace, YdbModes)
         for (auto & batch : batches)
             streams.push_back(std::make_shared<CH::OneBlockInputStream>(batch));
 
-        BlockInputStreamPtr mergeStream = std::make_shared<CH::MergingSortedInputStream>(streams, descr, 5000);
+        BlockInputStreamPtr mergeStream = std::make_shared<CHY::MergingSortedInputStream>(streams, descr, 5000);
 
         while (auto batch = mergeStream->read())
             sorted.emplace_back(batch);
@@ -524,7 +524,7 @@ TEST(MergingSortedInputStreamReplace, YdbModes)
     EXPECT_EQ(sorted.size(), 1);
     EXPECT_EQ(sorted[0]->num_rows(), 1000);
     EXPECT_TRUE(CheckSorted1000(sorted[0]));
-    EXPECT_TRUE(NArrow::IsSortedAndUnique(sorted[0], descr->sorting_key));
+    EXPECT_TRUE(CHY::IsSortedAndUnique(sorted[0], descr->sorting_key));
 
     auto counts = CountValues(std::static_pointer_cast<arrow::UInt64Array>(sorted[0]->GetColumnByName("snap")));
     EXPECT_EQ(counts[0], 200);
@@ -547,7 +547,7 @@ TEST(MergingSortedInputStreamReplaceReversed, YdbModes)
     auto sortingKey = batches[0]->schema();
     auto replaceKey = batch->schema();
 
-    auto descr = std::make_shared<CH::SortDescription>(sortingKey, replaceKey);
+    auto descr = std::make_shared<CHY::SortDescription>(sortingKey, replaceKey);
     descr->directions.back() = 1; // greater snapshot last
     descr->not_null = true;
     descr->Inverse();
@@ -558,7 +558,7 @@ TEST(MergingSortedInputStreamReplaceReversed, YdbModes)
         for (auto & batch : batches)
             streams.push_back(std::make_shared<CH::OneBlockInputStream>(batch));
 
-        BlockInputStreamPtr mergeStream = std::make_shared<CH::MergingSortedInputStream>(streams, descr, 5000);
+        BlockInputStreamPtr mergeStream = std::make_shared<CHY::MergingSortedInputStream>(streams, descr, 5000);
 
         while (auto batch = mergeStream->read())
             sorted.emplace_back(batch);
@@ -567,7 +567,7 @@ TEST(MergingSortedInputStreamReplaceReversed, YdbModes)
     EXPECT_EQ(sorted.size(), 1);
     EXPECT_EQ(sorted[0]->num_rows(), 1000);
     EXPECT_TRUE(CheckSorted1000(sorted[0], true));
-    EXPECT_TRUE(NArrow::IsSortedAndUnique(sorted[0], descr->sorting_key, true));
+    EXPECT_TRUE(CHY::IsSortedAndUnique(sorted[0], descr->sorting_key, true));
 
     auto counts = CountValues(std::static_pointer_cast<arrow::UInt64Array>(sorted[0]->GetColumnByName("snap")));
     EXPECT_EQ(counts[0], 200);

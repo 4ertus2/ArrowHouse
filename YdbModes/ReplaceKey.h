@@ -7,7 +7,7 @@
 #include <arrow/api.h>
 #include "helpers.h"
 
-namespace CH
+namespace CHY
 {
 
 using ArrayVec = std::vector<std::shared_ptr<arrow::Array>>;
@@ -24,7 +24,7 @@ public:
         {
             auto columnsNew = std::make_shared<ArrayVec>();
             for (auto && i : *columns)
-                columnsNew->emplace_back(NArrow::CopyRecords(i, {position}));
+                columnsNew->emplace_back(CHY::CopyRecords(i, {position}));
             columns = columnsNew;
             position = 0;
         }

@@ -5,7 +5,7 @@
 #pragma once
 #include <arrow/api.h>
 
-namespace CH
+namespace CHY
 {
 
 /// Description of the sorting rule for several columns.

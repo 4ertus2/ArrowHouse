@@ -5,8 +5,10 @@
 
 #include <optional>
 
-namespace CH
+namespace CHY
 {
+
+using namespace CH;
 
 /// Streams checks that flow of blocks is sorted in the sort_description order
 /// Othrewise throws exception in readImpl function.

@@ -3,13 +3,10 @@
 #include <arrow/api.h>
 #include "switch_type.h"
 
-namespace CH
+namespace CHY
 {
-struct SortDescription;
-}
 
-namespace NArrow
-{
+struct SortDescription;
 
 inline bool HasNulls(const std::shared_ptr<arrow::Array> & column)
 {
@@ -44,10 +41,10 @@ uint64_t GetBatchDataSize(const std::shared_ptr<arrow::RecordBatch> & batch);
 uint64_t GetArrayDataSize(const std::shared_ptr<arrow::Array> & column);
 
 std::shared_ptr<arrow::RecordBatch> CombineSortedBatches(
-    const std::vector<std::shared_ptr<arrow::RecordBatch>> & batches, const std::shared_ptr<CH::SortDescription> & description);
+    const std::vector<std::shared_ptr<arrow::RecordBatch>> & batches, const std::shared_ptr<SortDescription> & description);
 std::vector<std::shared_ptr<arrow::RecordBatch>> MergeSortedBatches(
     const std::vector<std::shared_ptr<arrow::RecordBatch>> & batches,
-    const std::shared_ptr<CH::SortDescription> & description,
+    const std::shared_ptr<SortDescription> & description,
     size_t maxBatchRows);
 
 bool MergeBatchColumns(

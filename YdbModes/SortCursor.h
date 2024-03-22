@@ -9,7 +9,7 @@
 #include "SortDescription.h"
 #include "helpers.h"
 
-namespace CH
+namespace CHY
 {
 
 /// Cursor allows to compare rows in different batches.
@@ -39,12 +39,12 @@ struct SortCursorImpl
     void Reset(std::shared_ptr<arrow::RecordBatch> batch)
     {
         current_batch = batch;
-        auto rb_sorting = NArrow::ExtractColumns(batch, desc->sorting_key);
+        auto rb_sorting = CHY::ExtractColumns(batch, desc->sorting_key);
         sort_columns = std::make_shared<ArrayVec>(rb_sorting->columns());
         all_columns = &batch->columns();
         if (desc->replace_key)
         {
-            auto rb_beplace = NArrow::ExtractColumns(batch, desc->replace_key);
+            auto rb_beplace = CHY::ExtractColumns(batch, desc->replace_key);
             replace_columns = std::make_shared<ArrayVec>(rb_beplace->columns());
         }
         pos = 0;

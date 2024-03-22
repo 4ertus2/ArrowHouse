@@ -7,7 +7,7 @@
 #include "switch_type.h"
 #include <queue>
 
-namespace CH
+namespace CHY
 {
 
 class RowsBuffer : public IRowsBuffer
@@ -36,7 +36,7 @@ public:
         {
             arrow::ArrayBuilder & builder = *Columns[i];
             for (auto & [srcColumn, rowPosition] : Rows)
-                NArrow::Append(builder, *srcColumn->at(i), rowPosition);
+                CHY::Append(builder, *srcColumn->at(i), rowPosition);
         }
         Rows.clear();
     }
@@ -126,7 +126,7 @@ void MergingSortedInputStream::Init()
             continue;
 
         for (int32_t j = 0; j < batch->num_columns(); ++j)
-            column_size[batch->column_name(j)] += NArrow::GetArrayDataSize(batch->column(j));
+            column_size[batch->column_name(j)] += CHY::GetArrayDataSize(batch->column(j));
 
         total_rows += batch->num_rows();
         cursors[i] = SortCursorImpl(batch, description, i);
@@ -161,14 +161,14 @@ std::shared_ptr<arrow::RecordBatch> MergingSortedInputStream::readImpl()
     }
     else
     {
-        auto builders = NArrow::MakeBuilders(header, expected_batch_size, column_size);
+        auto builders = CHY::MakeBuilders(header, expected_batch_size, column_size);
         if (builders.empty())
             return {};
 
         RowsBuffer rows_buffer(builders, max_batch_size);
         Merge(rows_buffer, queue);
 
-        auto arrays = NArrow::Finish(std::move(builders));
+        auto arrays = CHY::Finish(std::move(builders));
         if (!arrays[0]->length())
             return {};
         return arrow::RecordBatch::Make(header, arrays[0]->length(), arrays);

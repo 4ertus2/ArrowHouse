@@ -1,6 +1,5 @@
 #pragma once
 
-#include <iostream>
 #include <DataStreams/IBlockInputStream.h>
 
 namespace CH
