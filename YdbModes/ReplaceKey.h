@@ -175,9 +175,6 @@ private:
         arrow::Type::type typeId = lhs.type_id();
         switch (typeId)
         {
-            case arrow::Type::NA:
-            case arrow::Type::BOOL:
-                break;
             case arrow::Type::UINT8:
                 return CompareView<arrow::UInt8Array, notNull>(lhs, lpos, rhs, rpos);
             case arrow::Type::INT8:
@@ -194,8 +191,6 @@ private:
                 return CompareView<arrow::UInt64Array, notNull>(lhs, lpos, rhs, rpos);
             case arrow::Type::INT64:
                 return CompareView<arrow::Int64Array, notNull>(lhs, lpos, rhs, rpos);
-            case arrow::Type::HALF_FLOAT:
-                break;
             case arrow::Type::FLOAT:
                 return CompareView<arrow::FloatArray, notNull>(lhs, lpos, rhs, rpos);
             case arrow::Type::DOUBLE:
@@ -205,9 +200,15 @@ private:
             case arrow::Type::BINARY:
                 return CompareView<arrow::BinaryArray, notNull>(lhs, lpos, rhs, rpos);
             case arrow::Type::FIXED_SIZE_BINARY:
+                return CompareView<arrow::FixedSizeBinaryArray, notNull>(lhs, lpos, rhs, rpos);
+            case arrow::Type::LARGE_BINARY:
+                return CompareView<arrow::LargeBinaryArray, notNull>(lhs, lpos, rhs, rpos);
+            case arrow::Type::LARGE_STRING:
+                return CompareView<arrow::LargeStringArray, notNull>(lhs, lpos, rhs, rpos);
             case arrow::Type::DATE32:
+                return CompareView<arrow::Date32Array, notNull>(lhs, lpos, rhs, rpos);
             case arrow::Type::DATE64:
-                break;
+                return CompareView<arrow::Date64Array, notNull>(lhs, lpos, rhs, rpos);
             case arrow::Type::TIMESTAMP:
                 return CompareView<arrow::TimestampArray, notNull>(lhs, lpos, rhs, rpos);
             case arrow::Type::TIME32:
@@ -217,22 +218,26 @@ private:
             case arrow::Type::DURATION:
                 return CompareView<arrow::DurationArray, notNull>(lhs, lpos, rhs, rpos);
             case arrow::Type::DECIMAL256:
+                return CompareView<arrow::Decimal256Array, notNull>(lhs, lpos, rhs, rpos);
             case arrow::Type::DECIMAL:
+                return CompareView<arrow::DecimalArray, notNull>(lhs, lpos, rhs, rpos);
+            case arrow::Type::INTERVAL_MONTHS:
+                return CompareView<arrow::MonthIntervalArray, notNull>(lhs, lpos, rhs, rpos);
+            case arrow::Type::NA:
+            case arrow::Type::BOOL:
+            case arrow::Type::HALF_FLOAT:
+            case arrow::Type::INTERVAL_DAY_TIME:
+            case arrow::Type::INTERVAL_MONTH_DAY_NANO:
             case arrow::Type::DENSE_UNION:
             case arrow::Type::DICTIONARY:
             case arrow::Type::EXTENSION:
             case arrow::Type::FIXED_SIZE_LIST:
-            case arrow::Type::INTERVAL_DAY_TIME:
-            case arrow::Type::INTERVAL_MONTHS:
-            case arrow::Type::LARGE_BINARY:
             case arrow::Type::LARGE_LIST:
-            case arrow::Type::LARGE_STRING:
             case arrow::Type::LIST:
             case arrow::Type::MAP:
             case arrow::Type::MAX_ID:
             case arrow::Type::SPARSE_UNION:
             case arrow::Type::STRUCT:
-            case arrow::Type::INTERVAL_MONTH_DAY_NANO:
             case arrow::Type::RUN_END_ENCODED:
                 throw std::runtime_error("not implemented");
         }
