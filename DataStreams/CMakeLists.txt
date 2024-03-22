@@ -1,6 +1,7 @@
 add_library(
     DataStreams STATIC
     AggregatingBlockInputStream.cpp
+    FilterColumnsBlockInputStream.cpp
     IBlockInputStream.cpp
     MergingAggregatedBlockInputStream.cpp
 )

@@ -1,6 +1,9 @@
-#include <YdbModes/CheckSortedBlockInputStream.h>
+#include <DataStreams/BlocksListBlockInputStream.h>
 #include <DataStreams/ConcatBlockInputStream.h>
+#include <DataStreams/FilterColumnsBlockInputStream.h>
+#include <DataStreams/NullBlockInputStream.h>
 #include <DataStreams/OneBlockInputStream.h>
+#include <YdbModes/CheckSortedBlockInputStream.h>
 #include <YdbModes/helpers.h>
 #include <gtest/gtest.h>
 
@@ -18,12 +21,31 @@ static std::shared_ptr<arrow::RecordBatch> TestBatch(int num_rows = 10, std::str
     return ret;
 }
 
+TEST(NullBlockInputStream, StreamSmoke)
+{
+    std::shared_ptr<arrow::RecordBatch> batch = TestBatch();
+    NullBlockInputStream stream(batch->schema());
+    EXPECT_EQ(stream.getName(), "Null");
+    EXPECT_EQ(stream.read().get(), nullptr);
+}
+
 TEST(OneBlockInputStream, StreamSmoke)
 {
     std::shared_ptr<arrow::RecordBatch> batch = TestBatch();
     OneBlockInputStream stream(batch);
     EXPECT_EQ(stream.getName(), "One");
     batch = stream.read();
+}
+
+TEST(BlocksListBlockInputStream, StreamSmoke)
+{
+    std::shared_ptr<arrow::RecordBatch> src_batch = TestBatch();
+
+    auto list = std::make_shared<BlocksListBlockInputStream>(CH::BlocksList{src_batch, src_batch});
+    EXPECT_EQ(list->getName(), "BlocksList");
+
+    while (auto batch = list->read())
+        EXPECT_EQ(batch.get(), src_batch.get());
 }
 
 TEST(ConcatBlockInputStream, StreamSmoke)
@@ -42,6 +64,26 @@ TEST(ConcatBlockInputStream, StreamSmoke)
         auto batch = concat->read();
         EXPECT_EQ(batch.get(), src_batch.get());
     }
+}
+
+TEST(FilterColumnsBlockInputStream, StreamSmoke)
+{
+    std::shared_ptr<arrow::RecordBatch> src_batch = TestBatch(10, "int64");
+    BlockInputStreamPtr stream = std::make_shared<OneBlockInputStream>(src_batch);
+
+    std::vector<std::string> names = {"int64"};
+    auto proj = std::make_shared<FilterColumnsBlockInputStream>(stream, names, true);
+    EXPECT_EQ(proj->getName(), "FilterColumns");
+
+    auto batch = proj->read();
+    EXPECT_NE(batch.get(), nullptr);
+    EXPECT_EQ(batch->num_columns(), 1);
+
+    names = {};
+    proj = std::make_shared<FilterColumnsBlockInputStream>(stream, names, true);
+    batch = proj->read();
+
+    EXPECT_EQ(batch.get(), nullptr);
 }
 
 TEST(CheckSortedBlockInputStream, StreamSmoke)
