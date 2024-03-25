@@ -4,6 +4,7 @@
 #include <DataStreams/NullBlockInputStream.h>
 #include <DataStreams/OneBlockInputStream.h>
 #include <DataStreams/ReverseBlockInputStream.h>
+#include <DataStreams/UnionBlockInputStream.h>
 #include <YdbModes/CheckSortedBlockInputStream.h>
 #include <YdbModes/helpers.h>
 #include <gtest/gtest.h>
@@ -114,6 +115,22 @@ TEST(CheckSortedBlockInputStream, StreamSmoke)
     sort_descr.directions = {-1};
     check = std::make_shared<CHY::CheckSortedBlockInputStream>(one, sort_descr);
     check->read();
+}
+
+TEST(UnionBlockInputStream, StreamSmoke)
+{
+    std::shared_ptr<arrow::RecordBatch> src_batch = TestBatch();
+    BlockInputStreams streams;
+    streams.reserve(128);
+    for (size_t i = 0; i < 128; ++i)
+        streams.push_back(std::make_shared<OneBlockInputStream>(src_batch));
+
+    BlockInputStreamPtr additional = {};
+    auto union_stream = std::make_shared<UnionBlockInputStream>(streams, additional, 16);
+    EXPECT_EQ(union_stream->getName(), "Union");
+
+    while (auto batch = union_stream->read())
+        EXPECT_EQ(batch.get(), src_batch.get());
 }
 
 int main(int argc, char ** argv)
