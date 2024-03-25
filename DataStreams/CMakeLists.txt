@@ -4,6 +4,7 @@ add_library(
     FilterColumnsBlockInputStream.cpp
     IBlockInputStream.cpp
     MergingAggregatedBlockInputStream.cpp
+    ReverseBlockInputStream.cpp
 )
 
 add_executable(ut_streams_smoke tests/gtest_streams_smoke.cpp)

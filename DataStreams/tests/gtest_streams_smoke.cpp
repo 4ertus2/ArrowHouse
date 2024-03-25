@@ -3,6 +3,7 @@
 #include <DataStreams/FilterColumnsBlockInputStream.h>
 #include <DataStreams/NullBlockInputStream.h>
 #include <DataStreams/OneBlockInputStream.h>
+#include <DataStreams/ReverseBlockInputStream.h>
 #include <YdbModes/CheckSortedBlockInputStream.h>
 #include <YdbModes/helpers.h>
 #include <gtest/gtest.h>
@@ -84,6 +85,18 @@ TEST(FilterColumnsBlockInputStream, StreamSmoke)
     batch = proj->read();
 
     EXPECT_EQ(batch.get(), nullptr);
+}
+
+TEST(ReverseBlockInputStream, StreamSmoke)
+{
+    std::shared_ptr<arrow::RecordBatch> batch = TestBatch();
+    auto one = std::make_shared<OneBlockInputStream>(batch);
+
+    auto check = std::make_shared<ReverseBlockInputStream>(one);
+    auto res_batch = check->read();
+    EXPECT_NE(res_batch.get(), nullptr);
+    EXPECT_EQ(res_batch->num_rows(), batch->num_rows());
+    EXPECT_EQ(res_batch->num_columns(), batch->num_columns());
 }
 
 TEST(CheckSortedBlockInputStream, StreamSmoke)
