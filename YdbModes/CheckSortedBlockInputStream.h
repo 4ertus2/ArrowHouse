@@ -1,6 +1,6 @@
 #pragma once
 #include <DataStreams/IBlockInputStream.h>
-#include <YdbModes/ReplaceKey.h>
+#include <YdbModes/CompositeKey.h>
 #include <YdbModes/SortDescription.h>
 
 #include <optional>
@@ -26,6 +26,6 @@ protected:
 private:
     Header header;
     SortDescription sort_description;
-    std::optional<ReplaceKey> last_row;
+    std::optional<CompositeKey> last_row;
 };
 }

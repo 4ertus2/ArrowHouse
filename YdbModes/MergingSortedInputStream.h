@@ -46,7 +46,7 @@ private:
     std::map<std::string, uint64_t> column_size;
 
     std::vector<std::shared_ptr<arrow::RecordBatch>> source_batches;
-    std::shared_ptr<ReplaceKey> prev_key;
+    std::shared_ptr<CompositeKey> prev_key;
 
     std::vector<SortCursorImpl> cursors;
     SortingHeap queue;

@@ -43,17 +43,17 @@ Block CheckSortedBlockInputStream::readImpl()
     auto sort_block = AHY::ExtractColumns(block, sort_description.sorting_key);
     auto & columns = sort_block->columns();
 
-    if (last_row && std::is_gt(compare(last_row->ToRaw(), RawReplaceKey(&columns, 0), sort_description)))
+    if (last_row && std::is_gt(compare(last_row->ToRaw(), RawCompositeKey(&columns, 0), sort_description)))
         throw std::runtime_error(err_msg);
 
     for (size_t i = 1; i < rows; ++i)
     {
-        auto cmp = compare(RawReplaceKey(&columns, i - 1), RawReplaceKey(&columns, i), sort_description);
+        auto cmp = compare(RawCompositeKey(&columns, i - 1), RawCompositeKey(&columns, i), sort_description);
         if (std::is_gt(cmp))
             throw std::runtime_error(err_msg);
     }
 
-    last_row = ReplaceKey::FromBatch(sort_block, rows - 1);
+    last_row = CompositeKey::FromBatch(sort_block, rows - 1);
     return block;
 }
 

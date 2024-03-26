@@ -5,7 +5,7 @@
 #pragma once
 #include <algorithm>
 #include <arrow/api.h>
-#include "ReplaceKey.h"
+#include "CompositeKey.h"
 #include "SortDescription.h"
 #include "helpers.h"
 
@@ -81,8 +81,8 @@ private:
     /// The specified row of this cursor is greater than the specified row of another cursor.
     bool GreaterAt(const SortCursor & rhs, size_t lhs_pos, size_t rhs_pos) const
     {
-        RawReplaceKey left(Impl->sort_columns.get(), lhs_pos);
-        RawReplaceKey right(rhs.Impl->sort_columns.get(), rhs_pos);
+        RawCompositeKey left(Impl->sort_columns.get(), lhs_pos);
+        RawCompositeKey right(rhs.Impl->sort_columns.get(), rhs_pos);
 
         if (not_null)
         {

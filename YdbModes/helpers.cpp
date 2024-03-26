@@ -9,7 +9,7 @@
 #include <memory>
 #include <arrow/api.h>
 #include <arrow/compute/api.h>
-#include "ReplaceKey.h"
+#include "CompositeKey.h"
 
 namespace AHY
 {
@@ -121,8 +121,8 @@ static bool IsSelfSorted(const std::shared_ptr<arrow::RecordBatch> & batch)
 
     for (int i = 1; i < batch->num_rows(); ++i)
     {
-        RawReplaceKey prev(&columns, i - 1);
-        RawReplaceKey current(&columns, i);
+        RawCompositeKey prev(&columns, i - 1);
+        RawCompositeKey current(&columns, i);
         if constexpr (desc)
         {
             if (prev < current)
@@ -303,11 +303,11 @@ MakeSortPermutation(const std::shared_ptr<arrow::RecordBatch> & batch, const std
 {
     auto keyBatch = ExtractColumns(batch, sortingKey);
     auto keyColumns = std::make_shared<AHY::ArrayVec>(keyBatch->columns());
-    std::vector<RawReplaceKey> points;
+    std::vector<RawCompositeKey> points;
     points.reserve(keyBatch->num_rows());
 
     for (int i = 0; i < keyBatch->num_rows(); ++i)
-        points.push_back(RawReplaceKey(keyColumns.get(), i));
+        points.push_back(RawCompositeKey(keyColumns.get(), i));
 
     bool haveNulls = false;
     for (auto & column : *keyColumns)
@@ -323,7 +323,7 @@ MakeSortPermutation(const std::shared_ptr<arrow::RecordBatch> & batch, const std
         std::sort(points.begin(), points.end());
     else
         std::sort(
-            points.begin(), points.end(), [](const RawReplaceKey & a, const RawReplaceKey & b) { return std::is_lt(a.CompareNotNull(b)); });
+            points.begin(), points.end(), [](const RawCompositeKey & a, const RawCompositeKey & b) { return std::is_lt(a.CompareNotNull(b)); });
 
     arrow::UInt64Builder builder;
     Validate(builder.Reserve(points.size()));

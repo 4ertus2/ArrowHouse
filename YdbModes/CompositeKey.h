@@ -13,7 +13,7 @@ namespace AHY
 using ArrayVec = std::vector<std::shared_ptr<arrow::Array>>;
 
 template <typename ArrayVecPtr>
-class ReplaceKeyTemplate
+class TCompositeKey
 {
 public:
     static constexpr bool is_owning = std::is_same_v<ArrayVecPtr, std::shared_ptr<ArrayVec>>;
@@ -30,17 +30,17 @@ public:
         }
     }
 #endif
-    ReplaceKeyTemplate(ArrayVecPtr columns, const uint64_t position) : columns(columns), position(position) { }
+    TCompositeKey(ArrayVecPtr columns, const uint64_t position) : columns(columns), position(position) { }
 
     template <typename T = ArrayVecPtr>
     requires is_owning
-    ReplaceKeyTemplate(ArrayVec && columns, const uint64_t position)
+    TCompositeKey(ArrayVec && columns, const uint64_t position)
         : columns(std::make_shared<ArrayVec>(std::move(columns))), position(position)
     {
     }
 
     template <typename T>
-    bool operator==(const ReplaceKeyTemplate<T> & key) const
+    bool operator==(const TCompositeKey<T> & key) const
     {
         for (int i = 0; i < Size(); ++i)
         {
@@ -52,7 +52,7 @@ public:
     }
 
     template <typename T>
-    std::partial_ordering operator<=>(const ReplaceKeyTemplate<T> & key) const
+    std::partial_ordering operator<=>(const TCompositeKey<T> & key) const
     {
         for (int i = 0; i < Size(); ++i)
         {
@@ -64,7 +64,7 @@ public:
     }
 
     template <typename T>
-    std::partial_ordering CompareNotNull(const ReplaceKeyTemplate<T> & key) const
+    std::partial_ordering CompareNotNull(const TCompositeKey<T> & key) const
     {
         for (int i = 0; i < Size(); ++i)
         {
@@ -76,7 +76,7 @@ public:
     }
 
     template <typename T>
-    std::partial_ordering ComparePartNotNull(const ReplaceKeyTemplate<T> & key, int size) const
+    std::partial_ordering ComparePartNotNull(const TCompositeKey<T> & key, int size) const
     {
         for (int i = 0; i < size; ++i)
         {
@@ -88,13 +88,13 @@ public:
     }
 
     template <typename T>
-    std::partial_ordering CompareColumnValueNotNull(int column, const ReplaceKeyTemplate<T> & key, int keyColumn) const
+    std::partial_ordering CompareColumnValueNotNull(int column, const TCompositeKey<T> & key, int keyColumn) const
     {
         return TypedCompare<true>(Column(column), position, key.Column(keyColumn), key.position);
     }
 
     template <typename T>
-    std::partial_ordering CompareColumnValue(int column, const ReplaceKeyTemplate<T> & key, int keyColumn) const
+    std::partial_ordering CompareColumnValue(int column, const TCompositeKey<T> & key, int keyColumn) const
     {
         return TypedCompare<false>(Column(column), position, key.Column(keyColumn), key.position);
     }
@@ -104,10 +104,10 @@ public:
     const arrow::Array & Column(int i) const { return *(*columns)[i]; }
     std::shared_ptr<arrow::Array> ColumnPtr(int i) const { return (*columns)[i]; }
 
-    ReplaceKeyTemplate<const ArrayVec *> ToRaw() const
+    TCompositeKey<const ArrayVec *> ToRaw() const
     {
         if constexpr (is_owning)
-            return ReplaceKeyTemplate<const ArrayVec *>(columns.get(), position);
+            return TCompositeKey<const ArrayVec *>(columns.get(), position);
         else
             return *this;
     }
@@ -129,7 +129,7 @@ public:
 
     template <typename T = ArrayVecPtr>
     requires is_owning
-    static ReplaceKeyTemplate<ArrayVecPtr>
+    static TCompositeKey<ArrayVecPtr>
     FromBatch(const std::shared_ptr<arrow::RecordBatch> & batch, const std::shared_ptr<arrow::Schema> & key, int row)
     {
         ArrayVec columns;
@@ -141,24 +141,24 @@ public:
             columns.push_back(array);
         }
 
-        return ReplaceKeyTemplate<ArrayVecPtr>(std::move(columns), row);
+        return TCompositeKey<ArrayVecPtr>(std::move(columns), row);
     }
 
     template <typename T = ArrayVecPtr>
     requires is_owning
-    static ReplaceKeyTemplate<ArrayVecPtr> FromBatch(const std::shared_ptr<arrow::RecordBatch> & batch, int row)
+    static TCompositeKey<ArrayVecPtr> FromBatch(const std::shared_ptr<arrow::RecordBatch> & batch, int row)
     {
         auto columns = std::make_shared<ArrayVec>(batch->columns());
-        return ReplaceKeyTemplate<ArrayVecPtr>(columns, row);
+        return TCompositeKey<ArrayVecPtr>(columns, row);
     }
 
-    static ReplaceKeyTemplate<ArrayVecPtr> FromScalar(const std::shared_ptr<arrow::Scalar> & s)
+    static TCompositeKey<ArrayVecPtr> FromScalar(const std::shared_ptr<arrow::Scalar> & s)
     {
         auto res = arrow::MakeArrayFromScalar(*s, 1);
-        return ReplaceKeyTemplate<ArrayVecPtr>(std::make_shared<ArrayVec>(1, *res), 0);
+        return TCompositeKey<ArrayVecPtr>(std::make_shared<ArrayVec>(1, *res), 0);
     }
 
-    static std::shared_ptr<arrow::Scalar> ToScalar(const ReplaceKeyTemplate<ArrayVecPtr> & key, int colNumber = 0)
+    static std::shared_ptr<arrow::Scalar> ToScalar(const TCompositeKey<ArrayVecPtr> & key, int colNumber = 0)
     {
         auto & column = key.Column(colNumber);
         auto res = column.GetScalar(key.GetPosition());
@@ -285,7 +285,7 @@ private:
     }
 };
 
-using ReplaceKey = ReplaceKeyTemplate<std::shared_ptr<ArrayVec>>;
-using RawReplaceKey = ReplaceKeyTemplate<const ArrayVec *>;
+using CompositeKey = TCompositeKey<std::shared_ptr<ArrayVec>>;
+using RawCompositeKey = TCompositeKey<const ArrayVec *>;
 
 }

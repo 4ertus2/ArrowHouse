@@ -210,7 +210,7 @@ void MergingSortedInputStream::MergeImpl(IRowsBuffer & rows_buffer, SortingHeap 
         if (!prev_key && queue.IsValid())
         {
             auto current = queue.Current();
-            prev_key = std::make_shared<ReplaceKey>(current->replace_columns, current->getRow());
+            prev_key = std::make_shared<CompositeKey>(current->replace_columns, current->getRow());
             if (!rows_buffer.AddRow(current))
                 return;
             // Do not get Next() for simplicity. Lead to a dup
@@ -229,7 +229,7 @@ void MergingSortedInputStream::MergeImpl(IRowsBuffer & rows_buffer, SortingHeap 
 
         if constexpr (replace)
         {
-            ReplaceKey key(current->replace_columns, current->getRow());
+            CompositeKey key(current->replace_columns, current->getRow());
 
             if (key == *prev_key)
             {
