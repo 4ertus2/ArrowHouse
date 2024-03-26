@@ -6,6 +6,8 @@
 #include <DataStreams/ReverseBlockInputStream.h>
 #include <DataStreams/UnionBlockInputStream.h>
 #include <YdbModes/CheckSortedBlockInputStream.h>
+#include <YdbModes/ExpressionBlockInputStream.h>
+#include <YdbModes/SsaProgram.h>
 #include <YdbModes/helpers.h>
 #include <gtest/gtest.h>
 
@@ -115,6 +117,26 @@ TEST(CheckSortedBlockInputStream, StreamSmoke)
     sort_descr.directions = {-1};
     check = std::make_shared<AHY::CheckSortedBlockInputStream>(one, sort_descr);
     check->read();
+}
+
+TEST(ExpressionBlockInputStream, StreamSmoke)
+{
+    std::shared_ptr<arrow::RecordBatch> batch = TestBatch(10, "x");
+    auto one = std::make_shared<OneBlockInputStream>(batch);
+
+    auto ssa_step = std::make_shared<AHY::ProgramStep>();
+    ssa_step->assignes
+        = {AHY::Assign("res1", AHY::EOperation::Add, {"x", "x"}), AHY::Assign("res2", AHY::EOperation::Subtract, {"x", "x"})};
+    ssa_step->projection = {"res1", "res2"};
+    auto ssa = std::make_shared<AHY::Program>(std::vector<std::shared_ptr<AHY::ProgramStep>>{ssa_step});
+
+    auto expression = std::make_shared<AHY::ExpressionBlockInputStream>(one, ssa);
+    EXPECT_EQ(expression->getName(), "SSA");
+    auto res = expression->read();
+    EXPECT_EQ(res->num_columns(), 2);
+    EXPECT_EQ(res->num_rows(), 10);
+    EXPECT_EQ(res->schema()->GetFieldIndex("res1"), 0);
+    EXPECT_EQ(res->schema()->GetFieldIndex("res2"), 1);
 }
 
 TEST(UnionBlockInputStream, StreamSmoke)

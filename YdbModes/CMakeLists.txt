@@ -1,5 +1,6 @@
 add_library(
     YdbModes STATIC
+    ExpressionBlockInputStream.cpp
     CheckSortedBlockInputStream.cpp
     MergingSortedInputStream.cpp
     SortingBlockInputStream.cpp
