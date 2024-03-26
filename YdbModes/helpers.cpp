@@ -1,16 +1,16 @@
-#include "helpers.h"
+#include <DataStreams/FilterColumnsBlockInputStream.h>
 #include <DataStreams/IBlockStream_fwd.h>
 #include <DataStreams/OneBlockInputStream.h>
-#include <DataStreams/FilterColumnsBlockInputStream.h>
+#include <YdbModes/CompositeKey.h>
 #include <YdbModes/MergingSortedInputStream.h>
 #include <YdbModes/SortCursor.h>
+#include <YdbModes/helpers.h>
 #include <YdbModes/switch_type.h>
 
 #include <limits>
 #include <memory>
 #include <arrow/api.h>
 #include <arrow/compute/api.h>
-#include "CompositeKey.h"
 
 namespace AHY
 {
@@ -281,7 +281,9 @@ MakeSortPermutation(const std::shared_ptr<arrow::RecordBatch> & batch, const std
         std::sort(points.begin(), points.end());
     else
         std::sort(
-            points.begin(), points.end(), [](const RawCompositeKey & a, const RawCompositeKey & b) { return std::is_lt(a.CompareNotNull(b)); });
+            points.begin(),
+            points.end(),
+            [](const RawCompositeKey & a, const RawCompositeKey & b) { return std::is_lt(a.CompareNotNull(b)); });
 
     arrow::UInt64Builder builder;
     Validate(builder.Reserve(points.size()));

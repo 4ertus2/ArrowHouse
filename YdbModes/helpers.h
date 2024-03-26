@@ -1,7 +1,9 @@
 #pragma once
+
+#include <YdbModes/switch_type.h>
+
 #include <map>
 #include <arrow/api.h>
-#include "switch_type.h"
 
 namespace AHY
 {
