@@ -1,3 +1,4 @@
+#include <DataStreams/FilterColumnsBlockInputStream.h>
 #include <YdbModes/CheckSortedBlockInputStream.h>
 #include <YdbModes/helpers.h>
 
@@ -40,7 +41,7 @@ Block CheckSortedBlockInputStream::readImpl()
         return block;
 
     size_t rows = block->num_rows();
-    auto sort_block = AHY::ExtractColumns(block, sort_description.sorting_key);
+    auto sort_block = AH::projection(block, sort_description.sorting_key, false);
     auto & columns = sort_block->columns();
 
     if (last_row && std::is_gt(compare(last_row->ToRaw(), RawCompositeKey(&columns, 0), sort_description)))

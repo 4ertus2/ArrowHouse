@@ -5,8 +5,9 @@
 #pragma once
 #include <algorithm>
 #include <arrow/api.h>
-#include "CompositeKey.h"
-#include "SortDescription.h"
+#include <DataStreams/FilterColumnsBlockInputStream.h>
+#include <YdbModes/CompositeKey.h>
+#include <YdbModes/SortDescription.h>
 #include "helpers.h"
 
 namespace AHY
@@ -39,12 +40,12 @@ struct SortCursorImpl
     void Reset(std::shared_ptr<arrow::RecordBatch> batch)
     {
         current_batch = batch;
-        auto rb_sorting = AHY::ExtractColumns(batch, desc->sorting_key);
+        auto rb_sorting = AH::projection(batch, desc->sorting_key, false);
         sort_columns = std::make_shared<ArrayVec>(rb_sorting->columns());
         all_columns = &batch->columns();
         if (desc->replace_key)
         {
-            auto rb_beplace = AHY::ExtractColumns(batch, desc->replace_key);
+            auto rb_beplace = AH::projection(batch, desc->replace_key, false);
             replace_columns = std::make_shared<ArrayVec>(rb_beplace->columns());
         }
         pos = 0;

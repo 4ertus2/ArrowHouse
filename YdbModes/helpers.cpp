@@ -1,9 +1,10 @@
 #include "helpers.h"
-#include "DataStreams/IBlockStream_fwd.h"
-#include "DataStreams/OneBlockInputStream.h"
-#include "MergingSortedInputStream.h"
-#include "SortCursor.h"
-#include "switch_type.h"
+#include <DataStreams/IBlockStream_fwd.h>
+#include <DataStreams/OneBlockInputStream.h>
+#include <DataStreams/FilterColumnsBlockInputStream.h>
+#include <YdbModes/MergingSortedInputStream.h>
+#include <YdbModes/SortCursor.h>
+#include <YdbModes/switch_type.h>
 
 #include <limits>
 #include <memory>
@@ -39,49 +40,6 @@ ExtractColumnsImpl(const std::shared_ptr<arrow::RecordBatch> & srcBatch, const s
 
     return arrow::RecordBatch::Make(std::make_shared<arrow::Schema>(std::move(fields)), srcBatch->num_rows(), std::move(columns));
 }
-}
-
-std::shared_ptr<arrow::RecordBatch>
-ExtractColumns(const std::shared_ptr<arrow::RecordBatch> & srcBatch, const std::vector<std::string> & columnNames)
-{
-    return ExtractColumnsImpl(srcBatch, columnNames);
-}
-
-std::shared_ptr<arrow::RecordBatch>
-ExtractColumns(const std::shared_ptr<arrow::RecordBatch> & srcBatch, const std::shared_ptr<arrow::Schema> & dstSchema, bool addNotExisted)
-{
-    std::vector<std::shared_ptr<arrow::Array>> columns;
-    columns.reserve(dstSchema->num_fields());
-
-    for (auto & field : dstSchema->fields())
-    {
-        columns.push_back(srcBatch->GetColumnByName(field->name()));
-        if (!columns.back())
-        {
-            if (addNotExisted)
-            {
-                auto result = arrow::MakeArrayOfNull(field->type(), srcBatch->num_rows());
-                if (!result.ok())
-                    return nullptr;
-                columns.back() = *result;
-            }
-            else
-            {
-                return nullptr;
-            }
-        }
-        else
-        {
-            auto srcField = srcBatch->schema()->GetFieldByName(field->name());
-            if (!field->Equals(srcField))
-                return nullptr;
-        }
-
-        if (!columns.back()->type()->Equals(field->type()))
-            return nullptr;
-    }
-
-    return arrow::RecordBatch::Make(dstSchema, srcBatch->num_rows(), columns);
 }
 
 std::shared_ptr<arrow::RecordBatch> ToBatch(const std::shared_ptr<arrow::Table> & tableExt, const bool combine)
@@ -144,7 +102,7 @@ static bool IsSelfSorted(const std::shared_ptr<arrow::RecordBatch> & batch)
 
 bool IsSorted(const std::shared_ptr<arrow::RecordBatch> & batch, const std::shared_ptr<arrow::Schema> & sortingKey, bool desc)
 {
-    auto keyBatch = ExtractColumns(batch, sortingKey);
+    auto keyBatch = projection(batch, sortingKey, false);
     if (desc)
         return IsSelfSorted<true, false>(keyBatch);
     else
@@ -153,7 +111,7 @@ bool IsSorted(const std::shared_ptr<arrow::RecordBatch> & batch, const std::shar
 
 bool IsSortedAndUnique(const std::shared_ptr<arrow::RecordBatch> & batch, const std::shared_ptr<arrow::Schema> & sortingKey, bool desc)
 {
-    auto keyBatch = ExtractColumns(batch, sortingKey);
+    auto keyBatch = projection(batch, sortingKey, false);
     if (desc)
         return IsSelfSorted<true, true>(keyBatch);
     else
@@ -301,7 +259,7 @@ std::shared_ptr<arrow::UInt64Array> MakeUI64Array(uint64_t value, int64_t size)
 std::shared_ptr<arrow::UInt64Array>
 MakeSortPermutation(const std::shared_ptr<arrow::RecordBatch> & batch, const std::shared_ptr<arrow::Schema> & sortingKey)
 {
-    auto keyBatch = ExtractColumns(batch, sortingKey);
+    auto keyBatch = projection(batch, sortingKey, false);
     auto keyColumns = std::make_shared<AHY::ArrayVec>(keyBatch->columns());
     std::vector<RawCompositeKey> points;
     points.reserve(keyBatch->num_rows());

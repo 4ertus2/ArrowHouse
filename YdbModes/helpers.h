@@ -13,12 +13,6 @@ inline bool HasNulls(const std::shared_ptr<arrow::Array> & column)
     return column->null_bitmap_data();
 }
 
-std::shared_ptr<arrow::RecordBatch>
-ExtractColumns(const std::shared_ptr<arrow::RecordBatch> & srcBatch, const std::vector<std::string> & columnNames);
-std::shared_ptr<arrow::RecordBatch> ExtractColumns(
-    const std::shared_ptr<arrow::RecordBatch> & srcBatch, const std::shared_ptr<arrow::Schema> & dstSchema, bool addNotExisted = false);
-
-
 std::shared_ptr<arrow::RecordBatch> ToBatch(const std::shared_ptr<arrow::Table> & combinedTable, const bool combine = false);
 std::unique_ptr<arrow::ArrayBuilder> MakeBuilder(const std::shared_ptr<arrow::Field> & field);
 
