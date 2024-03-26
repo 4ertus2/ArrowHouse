@@ -50,7 +50,7 @@ add_library(
 
 add_library(arrowhouse INTERFACE)
 target_link_libraries(arrowhouse INTERFACE
-  Agg Common Columns DataStreams YdbModes
+  Agg YdbModes Columns DataStreams Common
   ch_contrib::cityhash
 )
 target_include_directories(arrowhouse SYSTEM INTERFACE
