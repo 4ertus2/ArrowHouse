@@ -5,10 +5,6 @@
 namespace AH
 {
 
-Header projection(const Header & src_schema, const Names & column_names, bool throw_if_column_not_found);
-Block projection(const Block & src_batch, const Names & column_names, bool throw_if_column_not_found);
-Block projection(const Block & src_batch, const Header & dst_schema, bool throw_if_column_not_found);
-
 /// Removes columns other than columns_to_save_ from block,
 ///  and reorders columns as in columns_to_save_.
 /// Functionality is similar to ExpressionBlockInputStream with ExpressionActions containing PROJECT action.

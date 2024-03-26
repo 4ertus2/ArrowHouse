@@ -1,4 +1,4 @@
-#include <DataStreams/FilterColumnsBlockInputStream.h>
+#include <Common/projection.h>
 #include <YdbModes/CheckSortedBlockInputStream.h>
 #include <YdbModes/helpers.h>
 

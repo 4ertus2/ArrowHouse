@@ -9,7 +9,7 @@ add_library(
 
 add_executable(ut_streams_smoke tests/gtest_streams_smoke.cpp)
 target_link_libraries(ut_streams_smoke
-    DataStreams YdbModes
+    DataStreams YdbModes Common
     Arrow::arrow_static
     ch_contrib::gtest
 )

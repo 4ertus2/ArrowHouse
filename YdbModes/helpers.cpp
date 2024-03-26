@@ -1,4 +1,3 @@
-#include <DataStreams/FilterColumnsBlockInputStream.h>
 #include <DataStreams/IBlockStream_fwd.h>
 #include <DataStreams/OneBlockInputStream.h>
 #include <YdbModes/CompositeKey.h>
@@ -6,6 +5,7 @@
 #include <YdbModes/SortCursor.h>
 #include <YdbModes/helpers.h>
 #include <YdbModes/switch_type.h>
+#include <Common/projection.h>
 
 #include <limits>
 #include <memory>

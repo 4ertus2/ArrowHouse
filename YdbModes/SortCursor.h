@@ -5,10 +5,11 @@
 #pragma once
 #include <algorithm>
 #include <arrow/api.h>
-#include <DataStreams/FilterColumnsBlockInputStream.h>
+
 #include <YdbModes/CompositeKey.h>
 #include <YdbModes/SortDescription.h>
-#include "helpers.h"
+#include <YdbModes/helpers.h>
+#include <Common/projection.h>
 
 namespace AHY
 {

@@ -5,7 +5,7 @@
 #include <unordered_set>
 #include <vector>
 
-#include <DataStreams/FilterColumnsBlockInputStream.h>
+#include <Common/projection.h>
 #include <YdbModes/SsaProgram.h>
 #include <YdbModes/helpers.h>
 
