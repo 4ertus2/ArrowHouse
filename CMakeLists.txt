@@ -12,7 +12,7 @@ set(CMAKE_CXX_STANDARD 23)
 
 set(PEDANTIC "-Werror -Wall -Wextra -Wshadow -Wunreachable-code -Wpointer-arith")
 set(IGNORES "-Wno-ignored-attributes -Wno-unused-parameter -Wno-missing-field-initializers -Wno-shadow \
-  -Wno-deprecated-declarations -Wno-redundant-move")
+  -Wno-deprecated-declarations -Wno-redundant-move -Wno-array-bounds -Wno-stringop-overflow")
 set(MUTED_ERRORS "")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pipe ${PEDANTIC} ${MUTED_ERRORS} ${IGNORES}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe ${PEDANTIC} ${MUTED_ERRORS} ${IGNORES}")
