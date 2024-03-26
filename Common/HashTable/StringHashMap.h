@@ -8,7 +8,7 @@
 #include <Common/HashTable/HashTableAllocator.h>
 #include <Common/HashTable/StringHashTable.h>
 
-namespace CH
+namespace AH
 {
 
 template <typename Key, typename TMapped>

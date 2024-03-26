@@ -2,7 +2,7 @@
 
 #include <DataStreams/IBlockInputStream.h>
 
-namespace CH
+namespace AH
 {
 
 Header projection(const Header & src_schema, const Names & column_names, bool throw_if_column_not_found);

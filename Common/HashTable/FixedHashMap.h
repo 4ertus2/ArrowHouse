@@ -7,7 +7,7 @@
 #include <Common/HashTable/FixedHashTable.h>
 #include <Common/HashTable/HashMap.h>
 
-namespace CH
+namespace AH
 {
 
 template <typename Key, typename TMapped, typename TState = HashTableNoState>

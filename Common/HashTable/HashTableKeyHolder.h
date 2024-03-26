@@ -47,7 +47,7 @@
   * keys to Arena.
   */
 
-namespace CH
+namespace AH
 {
 
 /**
@@ -87,19 +87,19 @@ struct ArenaKeyHolder
     Arena & pool;
 };
 
-inline StringRef & ALWAYS_INLINE keyHolderGetKey(CH::ArenaKeyHolder & holder)
+inline StringRef & ALWAYS_INLINE keyHolderGetKey(AH::ArenaKeyHolder & holder)
 {
     return holder.key;
 }
 
-inline void ALWAYS_INLINE keyHolderPersistKey(CH::ArenaKeyHolder & holder)
+inline void ALWAYS_INLINE keyHolderPersistKey(AH::ArenaKeyHolder & holder)
 {
     // Hash table shouldn't ask us to persist a zero key
     assert(holder.key.size > 0);
     holder.key.data = holder.pool.insert(holder.key.data, holder.key.size);
 }
 
-inline void ALWAYS_INLINE keyHolderDiscardKey(CH::ArenaKeyHolder &)
+inline void ALWAYS_INLINE keyHolderDiscardKey(AH::ArenaKeyHolder &)
 {
 }
 
@@ -113,16 +113,16 @@ struct SerializedKeyHolder
     Arena & pool;
 };
 
-inline StringRef & ALWAYS_INLINE keyHolderGetKey(CH::SerializedKeyHolder & holder)
+inline StringRef & ALWAYS_INLINE keyHolderGetKey(AH::SerializedKeyHolder & holder)
 {
     return holder.key;
 }
 
-inline void ALWAYS_INLINE keyHolderPersistKey(CH::SerializedKeyHolder &)
+inline void ALWAYS_INLINE keyHolderPersistKey(AH::SerializedKeyHolder &)
 {
 }
 
-inline void ALWAYS_INLINE keyHolderDiscardKey(CH::SerializedKeyHolder & holder)
+inline void ALWAYS_INLINE keyHolderDiscardKey(AH::SerializedKeyHolder & holder)
 {
     [[maybe_unused]] void * new_head = holder.pool.rollback(holder.key.size);
     assert(new_head == holder.key.data);

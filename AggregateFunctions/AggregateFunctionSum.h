@@ -11,7 +11,7 @@
 #include <AggregateFunctions/AggregateFunctionWrapper.h>
 #include <AggregateFunctions/IAggregateFunction.h>
 
-namespace CH
+namespace AH
 {
 
 /// Uses addOverflow method (if available) to avoid UB for sumWithOverflow()

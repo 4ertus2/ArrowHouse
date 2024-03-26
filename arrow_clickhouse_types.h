@@ -18,7 +18,7 @@
 
 #include <Common/PODArray_fwd.h>
 
-namespace CH
+namespace AH
 {
 
 /// What to do if the limit is exceeded.

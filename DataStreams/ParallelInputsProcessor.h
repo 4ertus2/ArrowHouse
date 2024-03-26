@@ -25,7 +25,7 @@
   *    then read block from source and then put source back to queue of available sources.
   */
 
-namespace CH
+namespace AH
 {
 
 /// Example of the handler.

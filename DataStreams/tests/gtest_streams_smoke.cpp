@@ -9,11 +9,11 @@
 #include <YdbModes/helpers.h>
 #include <gtest/gtest.h>
 
-using namespace CH;
+using namespace AH;
 
 static std::shared_ptr<arrow::RecordBatch> TestBatch(int num_rows = 10, std::string column_name = "int64")
 {
-    auto column = CHY::MakeUI64Array(42, num_rows);
+    auto column = AHY::MakeUI64Array(42, num_rows);
     std::vector<std::shared_ptr<arrow::Field>> fields = {std::make_shared<arrow::Field>(column_name, column->type())};
     auto schema = std::make_shared<arrow::Schema>(fields);
 
@@ -43,7 +43,7 @@ TEST(BlocksListBlockInputStream, StreamSmoke)
 {
     std::shared_ptr<arrow::RecordBatch> src_batch = TestBatch();
 
-    auto list = std::make_shared<BlocksListBlockInputStream>(CH::BlocksList{src_batch, src_batch});
+    auto list = std::make_shared<BlocksListBlockInputStream>(AH::BlocksList{src_batch, src_batch});
     EXPECT_EQ(list->getName(), "BlocksList");
 
     while (auto batch = list->read())
@@ -105,15 +105,15 @@ TEST(CheckSortedBlockInputStream, StreamSmoke)
     std::shared_ptr<arrow::RecordBatch> batch = TestBatch();
     auto one = std::make_shared<OneBlockInputStream>(batch);
 
-    CHY::SortDescription sort_descr;
+    AHY::SortDescription sort_descr;
     sort_descr.sorting_key = batch->schema();
     sort_descr.directions = {1};
 
-    auto check = std::make_shared<CHY::CheckSortedBlockInputStream>(one, sort_descr);
+    auto check = std::make_shared<AHY::CheckSortedBlockInputStream>(one, sort_descr);
     check->read();
 
     sort_descr.directions = {-1};
-    check = std::make_shared<CHY::CheckSortedBlockInputStream>(one, sort_descr);
+    check = std::make_shared<AHY::CheckSortedBlockInputStream>(one, sort_descr);
     check->read();
 }
 

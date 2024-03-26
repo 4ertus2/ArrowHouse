@@ -2,7 +2,7 @@
 
 #include <DataStreams/IBlockInputStream.h>
 
-namespace CH
+namespace AH
 {
 
 /// Reverses an order of rows in every block in a data stream.

@@ -11,7 +11,7 @@
 
 #include <type_traits>
 
-namespace CH
+namespace AH
 {
 
 /** Hash functions that are better than the trivial function std::hash.
@@ -403,7 +403,7 @@ struct IntHash32
 };
 
 template <>
-struct DefaultHash<CH::StringRef> : public CH::StringRefHash
+struct DefaultHash<AH::StringRef> : public AH::StringRefHash
 {
 };
 

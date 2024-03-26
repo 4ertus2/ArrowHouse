@@ -8,7 +8,7 @@
 #include <DataStreams/IBlockInputStream.h>
 
 
-namespace CH
+namespace AH
 {
 
 /** A pre-aggregate stream of blocks in which each block is already aggregated.

@@ -11,7 +11,7 @@
 #include <limits>
 
 
-namespace CH::wide
+namespace AH::wide
 {
 
 template <typename T>
@@ -57,7 +57,7 @@ namespace std
 
 // numeric limits
 template <size_t Bits, typename Signed>
-class numeric_limits<CH::wide::integer<Bits, Signed>>
+class numeric_limits<AH::wide::integer<Bits, Signed>>
 {
 public:
     static constexpr bool is_specialized = true;
@@ -84,80 +84,80 @@ public:
     static constexpr bool traps = true;
     static constexpr bool tinyness_before = false;
 
-    static constexpr CH::wide::integer<Bits, Signed> min() noexcept
+    static constexpr AH::wide::integer<Bits, Signed> min() noexcept
     {
         if (is_same<Signed, signed>::value)
         {
-            using T = CH::wide::integer<Bits, signed>;
+            using T = AH::wide::integer<Bits, signed>;
             T res{};
-            res.items[T::_impl::big(0)] = std::numeric_limits<typename CH::wide::integer<Bits, Signed>::signed_base_type>::min();
+            res.items[T::_impl::big(0)] = std::numeric_limits<typename AH::wide::integer<Bits, Signed>::signed_base_type>::min();
             return res;
         }
-        return CH::wide::integer<Bits, Signed>(0);
+        return AH::wide::integer<Bits, Signed>(0);
     }
 
-    static constexpr CH::wide::integer<Bits, Signed> max() noexcept
+    static constexpr AH::wide::integer<Bits, Signed> max() noexcept
     {
-        using T = CH::wide::integer<Bits, Signed>;
+        using T = AH::wide::integer<Bits, Signed>;
         T res{};
         res.items[T::_impl::big(0)] = is_same<Signed, signed>::value
-            ? std::numeric_limits<typename CH::wide::integer<Bits, Signed>::signed_base_type>::max()
-            : std::numeric_limits<typename CH::wide::integer<Bits, Signed>::base_type>::max();
-        for (unsigned i = 1; i < CH::wide::integer<Bits, Signed>::_impl::item_count; ++i)
+            ? std::numeric_limits<typename AH::wide::integer<Bits, Signed>::signed_base_type>::max()
+            : std::numeric_limits<typename AH::wide::integer<Bits, Signed>::base_type>::max();
+        for (unsigned i = 1; i < AH::wide::integer<Bits, Signed>::_impl::item_count; ++i)
         {
-            res.items[T::_impl::big(i)] = std::numeric_limits<typename CH::wide::integer<Bits, Signed>::base_type>::max();
+            res.items[T::_impl::big(i)] = std::numeric_limits<typename AH::wide::integer<Bits, Signed>::base_type>::max();
         }
         return res;
     }
 
-    static constexpr CH::wide::integer<Bits, Signed> lowest() noexcept { return min(); }
-    static constexpr CH::wide::integer<Bits, Signed> epsilon() noexcept { return 0; }
-    static constexpr CH::wide::integer<Bits, Signed> round_error() noexcept { return 0; }
-    static constexpr CH::wide::integer<Bits, Signed> infinity() noexcept { return 0; }
-    static constexpr CH::wide::integer<Bits, Signed> quiet_NaN() noexcept { return 0; }
-    static constexpr CH::wide::integer<Bits, Signed> signaling_NaN() noexcept { return 0; }
-    static constexpr CH::wide::integer<Bits, Signed> denorm_min() noexcept { return 0; }
+    static constexpr AH::wide::integer<Bits, Signed> lowest() noexcept { return min(); }
+    static constexpr AH::wide::integer<Bits, Signed> epsilon() noexcept { return 0; }
+    static constexpr AH::wide::integer<Bits, Signed> round_error() noexcept { return 0; }
+    static constexpr AH::wide::integer<Bits, Signed> infinity() noexcept { return 0; }
+    static constexpr AH::wide::integer<Bits, Signed> quiet_NaN() noexcept { return 0; }
+    static constexpr AH::wide::integer<Bits, Signed> signaling_NaN() noexcept { return 0; }
+    static constexpr AH::wide::integer<Bits, Signed> denorm_min() noexcept { return 0; }
 };
 
 // type traits
 template <size_t Bits, typename Signed, size_t Bits2, typename Signed2>
-struct common_type<CH::wide::integer<Bits, Signed>, CH::wide::integer<Bits2, Signed2>>
+struct common_type<AH::wide::integer<Bits, Signed>, AH::wide::integer<Bits2, Signed2>>
 {
     using type = std::conditional_t < Bits == Bits2,
-          CH::wide::integer<
+          AH::wide::integer<
               Bits,
               std::conditional_t<(std::is_same_v<Signed, Signed2> && std::is_same_v<Signed2, signed>), signed, unsigned>>,
-          std::conditional_t<Bits2<Bits, CH::wide::integer<Bits, Signed>, CH::wide::integer<Bits2, Signed2>>>;
+          std::conditional_t<Bits2<Bits, AH::wide::integer<Bits, Signed>, AH::wide::integer<Bits2, Signed2>>>;
 };
 
 template <size_t Bits, typename Signed, typename Arithmetic>
-struct common_type<CH::wide::integer<Bits, Signed>, Arithmetic>
+struct common_type<AH::wide::integer<Bits, Signed>, Arithmetic>
 {
-    static_assert(CH::wide::ArithmeticConcept<Arithmetic>());
+    static_assert(AH::wide::ArithmeticConcept<Arithmetic>());
 
     using type = std::conditional_t<
         std::is_floating_point_v<Arithmetic>,
         Arithmetic,
         std::conditional_t<
             sizeof(Arithmetic) < Bits * sizeof(long),
-            CH::wide::integer<Bits, Signed>,
+            AH::wide::integer<Bits, Signed>,
             std::conditional_t<
                 Bits * sizeof(long) < sizeof(Arithmetic),
                 Arithmetic,
                 std::conditional_t<
                     Bits * sizeof(long) == sizeof(Arithmetic) && (std::is_same_v<Signed, signed> || std::is_signed_v<Arithmetic>),
                     Arithmetic,
-                    CH::wide::integer<Bits, Signed>>>>>;
+                    AH::wide::integer<Bits, Signed>>>>>;
 };
 
 template <typename Arithmetic, size_t Bits, typename Signed>
-struct common_type<Arithmetic, CH::wide::integer<Bits, Signed>> : common_type<CH::wide::integer<Bits, Signed>, Arithmetic>
+struct common_type<Arithmetic, AH::wide::integer<Bits, Signed>> : common_type<AH::wide::integer<Bits, Signed>, Arithmetic>
 {
 };
 
 }
 
-namespace CH::wide
+namespace AH::wide
 {
 
 template <size_t Bits, typename Signed>
@@ -1436,9 +1436,9 @@ namespace std
 {
 
 template <size_t Bits, typename Signed>
-struct hash<CH::wide::integer<Bits, Signed>>
+struct hash<AH::wide::integer<Bits, Signed>>
 {
-    std::size_t operator()(const CH::wide::integer<Bits, Signed> & lhs) const
+    std::size_t operator()(const AH::wide::integer<Bits, Signed> & lhs) const
     {
         static_assert(Bits % (sizeof(size_t) * 8) == 0);
 

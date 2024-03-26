@@ -2,7 +2,7 @@
 
 #include <DataStreams/IBlockInputStream.h>
 
-namespace CH
+namespace AH
 {
 
 /** Combines several sources into one.

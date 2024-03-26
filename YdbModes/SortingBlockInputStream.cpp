@@ -2,7 +2,7 @@
 #include <YdbModes/helpers.h>
 
 
-namespace CHY
+namespace AHY
 {
 
 Block SortingBlockInputStream::readImpl()
@@ -12,8 +12,8 @@ Block SortingBlockInputStream::readImpl()
     if (!block || block->num_rows() == 0)
         return block;
 
-    auto permutation = CHY::MakeSortPermutation(block, description.sorting_key);
-    if (CHY::IsTrivialPermutation(*permutation))
+    auto permutation = AHY::MakeSortPermutation(block, description.sorting_key);
+    if (AHY::IsTrivialPermutation(*permutation))
         return block;
 
     auto res = arrow::compute::Take(block, permutation);

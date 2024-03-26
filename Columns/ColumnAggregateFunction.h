@@ -10,7 +10,7 @@
 #include <ranges>
 #include <common/StringRef.h>
 
-namespace CH
+namespace AH
 {
 
 class DataTypeAggregateFunction final : public arrow::ExtensionType

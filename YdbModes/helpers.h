@@ -3,7 +3,7 @@
 #include <arrow/api.h>
 #include "switch_type.h"
 
-namespace CHY
+namespace AHY
 {
 
 struct SortDescription;

@@ -7,7 +7,7 @@
 
 #include <unordered_set>
 
-namespace CH
+namespace AH
 {
 
 class ArrowAggregateFunctionWrapper : public arrow::compute::ScalarAggregateFunction

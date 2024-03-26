@@ -1,6 +1,6 @@
 #include <DataStreams/ReverseBlockInputStream.h>
 
-namespace CH
+namespace AH
 {
 
 ReverseBlockInputStream::ReverseBlockInputStream(const BlockInputStreamPtr & input)

@@ -9,7 +9,7 @@
 #ifdef __SSE2__
 #    include <emmintrin.h>
 
-namespace CH
+namespace AH
 {
 
 /** memcpy function could work suboptimal if all the following conditions are met:
@@ -64,7 +64,7 @@ inline void memcpySmallAllowReadWriteOverflow15(void * __restrict dst, const voi
 
 #else /// Implementation for other platforms.
 
-namespace CH
+namespace AH
 {
 
 inline void memcpySmallAllowReadWriteOverflow15(void * __restrict dst, const void * __restrict src, size_t n)

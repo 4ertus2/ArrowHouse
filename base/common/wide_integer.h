@@ -27,7 +27,7 @@
 #include <type_traits>
 #include <initializer_list>
 
-namespace CH::wide
+namespace AH::wide
 {
 template <size_t Bits, typename Signed>
 class integer;
@@ -37,17 +37,17 @@ namespace std
 {
 
 template <size_t Bits, typename Signed, size_t Bits2, typename Signed2>
-struct common_type<CH::wide::integer<Bits, Signed>, CH::wide::integer<Bits2, Signed2>>;
+struct common_type<AH::wide::integer<Bits, Signed>, AH::wide::integer<Bits2, Signed2>>;
 
 template <size_t Bits, typename Signed, typename Arithmetic>
-struct common_type<CH::wide::integer<Bits, Signed>, Arithmetic>;
+struct common_type<AH::wide::integer<Bits, Signed>, Arithmetic>;
 
 template <typename Arithmetic, size_t Bits, typename Signed>
-struct common_type<Arithmetic, CH::wide::integer<Bits, Signed>>;
+struct common_type<Arithmetic, AH::wide::integer<Bits, Signed>>;
 
 }
 
-namespace CH::wide
+namespace AH::wide
 {
 
 template <size_t Bits, typename Signed>
@@ -253,7 +253,7 @@ namespace std
 {
 
 template <size_t Bits, typename Signed>
-struct hash<CH::wide::integer<Bits, Signed>>;
+struct hash<AH::wide::integer<Bits, Signed>>;
 
 }
 

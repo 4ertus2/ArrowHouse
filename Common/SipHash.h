@@ -24,7 +24,7 @@
 #include <type_traits>
 #include <cstddef>
 
-namespace CH
+namespace AH
 {
 
 #define ROTL(x, b) static_cast<UInt64>(((x) << (b)) | ((x) >> (64 - (b))))

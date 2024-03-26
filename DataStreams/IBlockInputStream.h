@@ -12,7 +12,7 @@
 #include <mutex>
 
 
-namespace CH
+namespace AH
 {
 
 /** The stream interface for reading data by blocks from the database.

@@ -8,7 +8,7 @@
 #include "AggregationCommon.h"
 #include <Common/HashTable/HashTableKeyHolder.h>
 
-namespace CH
+namespace AH
 {
 
 namespace ColumnsHashing

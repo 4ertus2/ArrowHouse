@@ -27,7 +27,7 @@
   * Also, key in hash table must be of type, that zero bytes is compared equals to zero key.
   */
 
-namespace CH
+namespace AH
 {
 
 /** The state of the hash table that affects the properties of its cells.

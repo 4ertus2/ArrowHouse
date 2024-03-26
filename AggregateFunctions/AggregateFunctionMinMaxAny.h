@@ -10,7 +10,7 @@
 #include <AggregateFunctions/AggregateFunctionWrapper.h>
 
 
-namespace CH
+namespace AH
 {
 
 /// For numeric values.

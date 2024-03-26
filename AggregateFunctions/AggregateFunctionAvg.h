@@ -11,7 +11,7 @@
 #include <AggregateFunctions/AggregateFunctionWrapper.h>
 #include <AggregateFunctions/IAggregateFunction.h>
 
-namespace CH
+namespace AH
 {
 
 /**

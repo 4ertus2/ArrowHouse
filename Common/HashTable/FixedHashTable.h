@@ -6,7 +6,7 @@
 
 #include <Common/HashTable/HashTable.h>
 
-namespace CH
+namespace AH
 {
 
 template <typename Key, typename TState = HashTableNoState>
@@ -257,7 +257,7 @@ public:
         inline const value_type & get() const
         {
             if (!is_initialized || is_eof)
-                throw CH::Exception("No available data");
+                throw std::runtime_error("No available data");
 
             return cell.getValue();
         }

@@ -17,7 +17,7 @@
 #include <cassert>
 
 
-namespace CH
+namespace AH
 {
 
 namespace ColumnsHashing

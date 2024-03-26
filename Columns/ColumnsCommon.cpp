@@ -11,7 +11,7 @@
 #include <Common/PODArray.h>
 
 
-namespace CH
+namespace AH
 {
 
 #if defined(__SSE2__)

@@ -14,7 +14,7 @@
 #include "DataStreams/MergingAggregatedBlockInputStream.h"
 #include "DataStreams/OneBlockInputStream.h"
 
-namespace CH
+namespace AH
 {
 
 void RegisterAggregates(arrow::compute::FunctionRegistry * registry = nullptr)
@@ -22,12 +22,12 @@ void RegisterAggregates(arrow::compute::FunctionRegistry * registry = nullptr)
     if (!registry)
         registry = arrow::compute::GetFunctionRegistry();
 
-    registry->AddFunction(std::make_shared<CH::WrappedCount>("ch.count")).ok();
-    registry->AddFunction(std::make_shared<CH::WrappedMin>("ch.min")).ok();
-    registry->AddFunction(std::make_shared<CH::WrappedMax>("ch.max")).ok();
-    registry->AddFunction(std::make_shared<CH::WrappedAny>("ch.any")).ok();
-    registry->AddFunction(std::make_shared<CH::WrappedSum>("ch.sum")).ok();
-    registry->AddFunction(std::make_shared<CH::WrappedAvg>("ch.avg")).ok();
+    registry->AddFunction(std::make_shared<AH::WrappedCount>("ch.count")).ok();
+    registry->AddFunction(std::make_shared<AH::WrappedMin>("ch.min")).ok();
+    registry->AddFunction(std::make_shared<AH::WrappedMax>("ch.max")).ok();
+    registry->AddFunction(std::make_shared<AH::WrappedAny>("ch.any")).ok();
+    registry->AddFunction(std::make_shared<AH::WrappedSum>("ch.sum")).ok();
+    registry->AddFunction(std::make_shared<AH::WrappedAvg>("ch.avg")).ok();
 }
 
 // {i16, ui32, s1, s2}
@@ -215,146 +215,146 @@ size_t TestAggregate(const Block & block, const ColumnNumbers & agg_keys, const 
 
 TEST(ExecuteCount, Aggregates)
 {
-    CH::RegisterAggregates();
+    AH::RegisterAggregates();
 
-    auto block = CH::makeTestBlock(1000);
+    auto block = AH::makeTestBlock(1000);
 
-    EXPECT_TRUE(CH::TestExecute(block, {0, 1}));
-    EXPECT_TRUE(CH::TestExecute(block, {1, 0}));
-    EXPECT_TRUE(CH::TestExecute(block, {0, 2}));
-    EXPECT_TRUE(CH::TestExecute(block, {2, 0}));
-    EXPECT_TRUE(CH::TestExecute(block, {2, 3}));
-    EXPECT_TRUE(CH::TestExecute(block, {0, 1, 2, 3}));
+    EXPECT_TRUE(AH::TestExecute(block, {0, 1}));
+    EXPECT_TRUE(AH::TestExecute(block, {1, 0}));
+    EXPECT_TRUE(AH::TestExecute(block, {0, 2}));
+    EXPECT_TRUE(AH::TestExecute(block, {2, 0}));
+    EXPECT_TRUE(AH::TestExecute(block, {2, 3}));
+    EXPECT_TRUE(AH::TestExecute(block, {0, 1, 2, 3}));
 }
 
 TEST(AggregateCount, Aggregates)
 {
-    CH::RegisterAggregates();
+    AH::RegisterAggregates();
 
-    auto block = CH::makeTestBlock(1000);
+    auto block = AH::makeTestBlock(1000);
 
-    auto agg_count = CH::MakeCountDescription();
+    auto agg_count = AH::MakeCountDescription();
 
-    EXPECT_EQ(CH::TestAggregate(block, {0, 1}, agg_count), 9u * 7u);
-    EXPECT_EQ(CH::TestAggregate(block, {1, 0}, agg_count), 7u * 9u);
-    EXPECT_EQ(CH::TestAggregate(block, {0, 2}, agg_count), 9u * 5u);
-    EXPECT_EQ(CH::TestAggregate(block, {2, 0}, agg_count), 5u * 9u);
-    EXPECT_EQ(CH::TestAggregate(block, {2, 3}, agg_count), 5u * 3u);
-    EXPECT_EQ(CH::TestAggregate(block, {0, 1, 2, 3}, agg_count), 9u * 7u * 5u);
+    EXPECT_EQ(AH::TestAggregate(block, {0, 1}, agg_count), 9u * 7u);
+    EXPECT_EQ(AH::TestAggregate(block, {1, 0}, agg_count), 7u * 9u);
+    EXPECT_EQ(AH::TestAggregate(block, {0, 2}, agg_count), 9u * 5u);
+    EXPECT_EQ(AH::TestAggregate(block, {2, 0}, agg_count), 5u * 9u);
+    EXPECT_EQ(AH::TestAggregate(block, {2, 3}, agg_count), 5u * 3u);
+    EXPECT_EQ(AH::TestAggregate(block, {0, 1, 2, 3}, agg_count), 9u * 7u * 5u);
 }
 
 TEST(AggregateMin, Aggregates)
 {
-    CH::RegisterAggregates();
+    AH::RegisterAggregates();
 
-    auto block = CH::makeTestBlock(1000);
+    auto block = AH::makeTestBlock(1000);
 
     for (int i = 0; i < block->num_columns(); ++i)
     {
         auto type = block->column(i)->type();
-        auto agg_descr = CH::MakeMinMaxAnyDescription("ch.min", type, i);
+        auto agg_descr = AH::MakeMinMaxAnyDescription("ch.min", type, i);
 
         EXPECT_TRUE(agg_descr.function);
         EXPECT_EQ(agg_descr.arguments.size(), 1u);
 
-        EXPECT_EQ(CH::TestAggregate(block, {0, 1}, agg_descr), 9u * 7u);
-        EXPECT_EQ(CH::TestAggregate(block, {1, 0}, agg_descr), 7u * 9u);
-        EXPECT_EQ(CH::TestAggregate(block, {0, 2}, agg_descr), 9u * 5u);
-        EXPECT_EQ(CH::TestAggregate(block, {2, 0}, agg_descr), 5u * 9u);
-        EXPECT_EQ(CH::TestAggregate(block, {2, 3}, agg_descr), 5u * 3u);
-        EXPECT_EQ(CH::TestAggregate(block, {0, 1, 2, 3}, agg_descr), 9u * 7u * 5u);
+        EXPECT_EQ(AH::TestAggregate(block, {0, 1}, agg_descr), 9u * 7u);
+        EXPECT_EQ(AH::TestAggregate(block, {1, 0}, agg_descr), 7u * 9u);
+        EXPECT_EQ(AH::TestAggregate(block, {0, 2}, agg_descr), 9u * 5u);
+        EXPECT_EQ(AH::TestAggregate(block, {2, 0}, agg_descr), 5u * 9u);
+        EXPECT_EQ(AH::TestAggregate(block, {2, 3}, agg_descr), 5u * 3u);
+        EXPECT_EQ(AH::TestAggregate(block, {0, 1, 2, 3}, agg_descr), 9u * 7u * 5u);
     }
 }
 
 TEST(AggregateMax, Aggregates)
 {
-    CH::RegisterAggregates();
+    AH::RegisterAggregates();
 
-    auto block = CH::makeTestBlock(1000);
+    auto block = AH::makeTestBlock(1000);
 
     for (int i = 0; i < block->num_columns(); ++i)
     {
         auto type = block->column(i)->type();
-        auto agg_descr = CH::MakeMinMaxAnyDescription("ch.max", type, i);
+        auto agg_descr = AH::MakeMinMaxAnyDescription("ch.max", type, i);
 
         EXPECT_TRUE(agg_descr.function);
         EXPECT_EQ(agg_descr.arguments.size(), 1u);
 
-        EXPECT_EQ(CH::TestAggregate(block, {0, 1}, agg_descr), 9u * 7u);
-        EXPECT_EQ(CH::TestAggregate(block, {1, 0}, agg_descr), 7u * 9u);
-        EXPECT_EQ(CH::TestAggregate(block, {0, 2}, agg_descr), 9u * 5u);
-        EXPECT_EQ(CH::TestAggregate(block, {2, 0}, agg_descr), 5u * 9u);
-        EXPECT_EQ(CH::TestAggregate(block, {2, 3}, agg_descr), 5u * 3u);
-        EXPECT_EQ(CH::TestAggregate(block, {0, 1, 2, 3}, agg_descr), 9u * 7u * 5u);
+        EXPECT_EQ(AH::TestAggregate(block, {0, 1}, agg_descr), 9u * 7u);
+        EXPECT_EQ(AH::TestAggregate(block, {1, 0}, agg_descr), 7u * 9u);
+        EXPECT_EQ(AH::TestAggregate(block, {0, 2}, agg_descr), 9u * 5u);
+        EXPECT_EQ(AH::TestAggregate(block, {2, 0}, agg_descr), 5u * 9u);
+        EXPECT_EQ(AH::TestAggregate(block, {2, 3}, agg_descr), 5u * 3u);
+        EXPECT_EQ(AH::TestAggregate(block, {0, 1, 2, 3}, agg_descr), 9u * 7u * 5u);
     }
 }
 
 TEST(AggregateAny, Aggregates)
 {
-    CH::RegisterAggregates();
+    AH::RegisterAggregates();
 
-    auto block = CH::makeTestBlock(1000);
+    auto block = AH::makeTestBlock(1000);
 
     for (int i = 0; i < block->num_columns(); ++i)
     {
         auto type = block->column(i)->type();
-        auto agg_descr = CH::MakeMinMaxAnyDescription("ch.any", type, i);
+        auto agg_descr = AH::MakeMinMaxAnyDescription("ch.any", type, i);
 
         EXPECT_TRUE(agg_descr.function);
         EXPECT_EQ(agg_descr.arguments.size(), 1u);
 
-        EXPECT_EQ(CH::TestAggregate(block, {0, 1}, agg_descr), 9u * 7u);
-        EXPECT_EQ(CH::TestAggregate(block, {1, 0}, agg_descr), 7u * 9u);
-        EXPECT_EQ(CH::TestAggregate(block, {0, 2}, agg_descr), 9u * 5u);
-        EXPECT_EQ(CH::TestAggregate(block, {2, 0}, agg_descr), 5u * 9u);
-        EXPECT_EQ(CH::TestAggregate(block, {2, 3}, agg_descr), 5u * 3u);
-        EXPECT_EQ(CH::TestAggregate(block, {0, 1, 2, 3}, agg_descr), 9u * 7u * 5u);
+        EXPECT_EQ(AH::TestAggregate(block, {0, 1}, agg_descr), 9u * 7u);
+        EXPECT_EQ(AH::TestAggregate(block, {1, 0}, agg_descr), 7u * 9u);
+        EXPECT_EQ(AH::TestAggregate(block, {0, 2}, agg_descr), 9u * 5u);
+        EXPECT_EQ(AH::TestAggregate(block, {2, 0}, agg_descr), 5u * 9u);
+        EXPECT_EQ(AH::TestAggregate(block, {2, 3}, agg_descr), 5u * 3u);
+        EXPECT_EQ(AH::TestAggregate(block, {0, 1, 2, 3}, agg_descr), 9u * 7u * 5u);
     }
 }
 
 TEST(AggregateSum, Aggregates)
 {
-    CH::RegisterAggregates();
+    AH::RegisterAggregates();
 
-    auto block = CH::makeTestBlock(1000);
+    auto block = AH::makeTestBlock(1000);
 
     for (int i = 0; i < 2; ++i)
     {
         auto type = block->column(i)->type();
-        auto agg_descr = CH::MakeSumDescription(type, i);
+        auto agg_descr = AH::MakeSumDescription(type, i);
 
         EXPECT_TRUE(agg_descr.function);
         EXPECT_EQ(agg_descr.arguments.size(), 1u);
 
-        EXPECT_EQ(CH::TestAggregate(block, {0, 1}, agg_descr), 9u * 7u);
-        EXPECT_EQ(CH::TestAggregate(block, {1, 0}, agg_descr), 7u * 9u);
-        EXPECT_EQ(CH::TestAggregate(block, {0, 2}, agg_descr), 9u * 5u);
-        EXPECT_EQ(CH::TestAggregate(block, {2, 0}, agg_descr), 5u * 9u);
-        EXPECT_EQ(CH::TestAggregate(block, {2, 3}, agg_descr), 5u * 3u);
-        EXPECT_EQ(CH::TestAggregate(block, {0, 1, 2, 3}, agg_descr), 9u * 7u * 5u);
+        EXPECT_EQ(AH::TestAggregate(block, {0, 1}, agg_descr), 9u * 7u);
+        EXPECT_EQ(AH::TestAggregate(block, {1, 0}, agg_descr), 7u * 9u);
+        EXPECT_EQ(AH::TestAggregate(block, {0, 2}, agg_descr), 9u * 5u);
+        EXPECT_EQ(AH::TestAggregate(block, {2, 0}, agg_descr), 5u * 9u);
+        EXPECT_EQ(AH::TestAggregate(block, {2, 3}, agg_descr), 5u * 3u);
+        EXPECT_EQ(AH::TestAggregate(block, {0, 1, 2, 3}, agg_descr), 9u * 7u * 5u);
     }
 }
 
 TEST(AggregateAvg, Aggregates)
 {
-    CH::RegisterAggregates();
+    AH::RegisterAggregates();
 
-    auto block = CH::makeTestBlock(1000);
+    auto block = AH::makeTestBlock(1000);
 
     for (int i = 0; i < 2; ++i)
     {
         auto type = block->column(i)->type();
-        auto agg_descr = CH::MakeAvgDescription(type, i);
+        auto agg_descr = AH::MakeAvgDescription(type, i);
 
         EXPECT_TRUE(agg_descr.function);
         EXPECT_EQ(agg_descr.arguments.size(), 1u);
 
-        EXPECT_EQ(CH::TestAggregate(block, {0, 1}, agg_descr), 9u * 7u);
-        EXPECT_EQ(CH::TestAggregate(block, {1, 0}, agg_descr), 7u * 9u);
-        EXPECT_EQ(CH::TestAggregate(block, {0, 2}, agg_descr), 9u * 5u);
-        EXPECT_EQ(CH::TestAggregate(block, {2, 0}, agg_descr), 5u * 9u);
-        EXPECT_EQ(CH::TestAggregate(block, {2, 3}, agg_descr), 5u * 3u);
-        EXPECT_EQ(CH::TestAggregate(block, {0, 1, 2, 3}, agg_descr), 9u * 7u * 5u);
+        EXPECT_EQ(AH::TestAggregate(block, {0, 1}, agg_descr), 9u * 7u);
+        EXPECT_EQ(AH::TestAggregate(block, {1, 0}, agg_descr), 7u * 9u);
+        EXPECT_EQ(AH::TestAggregate(block, {0, 2}, agg_descr), 9u * 5u);
+        EXPECT_EQ(AH::TestAggregate(block, {2, 0}, agg_descr), 5u * 9u);
+        EXPECT_EQ(AH::TestAggregate(block, {2, 3}, agg_descr), 5u * 3u);
+        EXPECT_EQ(AH::TestAggregate(block, {0, 1, 2, 3}, agg_descr), 9u * 7u * 5u);
     }
 }
 

@@ -11,7 +11,7 @@
 #include <Common/Allocator.h>
 #include <Common/memcpySmall.h>
 
-namespace CH
+namespace AH
 {
 
 /** Memory pool to append something. For example, short strings.

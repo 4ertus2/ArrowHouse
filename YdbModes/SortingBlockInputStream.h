@@ -4,10 +4,10 @@
 #include <YdbModes/SortDescription.h>
 
 
-namespace CHY
+namespace AHY
 {
 
-using namespace CH;
+using namespace AH;
 
 class SortingBlockInputStream : public IBlockInputStream
 {

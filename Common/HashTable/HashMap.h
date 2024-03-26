@@ -14,7 +14,7 @@
   * Also, key in hash table must be of type, that zero bytes is compared equals to zero key.
   */
 
-namespace CH
+namespace AH
 {
 
 struct NoInitTag
@@ -294,18 +294,18 @@ namespace std
 {
 
 template <typename Key, typename TMapped, typename Hash, typename TState>
-struct tuple_size<CH::HashMapCell<Key, TMapped, Hash, TState>> : std::integral_constant<size_t, 2>
+struct tuple_size<AH::HashMapCell<Key, TMapped, Hash, TState>> : std::integral_constant<size_t, 2>
 {
 };
 
 template <typename Key, typename TMapped, typename Hash, typename TState>
-struct tuple_element<0, CH::HashMapCell<Key, TMapped, Hash, TState>>
+struct tuple_element<0, AH::HashMapCell<Key, TMapped, Hash, TState>>
 {
     using type = Key;
 };
 
 template <typename Key, typename TMapped, typename Hash, typename TState>
-struct tuple_element<1, CH::HashMapCell<Key, TMapped, Hash, TState>>
+struct tuple_element<1, AH::HashMapCell<Key, TMapped, Hash, TState>>
 {
     using type = TMapped;
 };
@@ -315,18 +315,18 @@ namespace std
 {
 
 template <typename Key, typename TMapped, typename Hash, typename TState>
-struct tuple_size<CH::HashMapCellWithSavedHash<Key, TMapped, Hash, TState>> : std::integral_constant<size_t, 2>
+struct tuple_size<AH::HashMapCellWithSavedHash<Key, TMapped, Hash, TState>> : std::integral_constant<size_t, 2>
 {
 };
 
 template <typename Key, typename TMapped, typename Hash, typename TState>
-struct tuple_element<0, CH::HashMapCellWithSavedHash<Key, TMapped, Hash, TState>>
+struct tuple_element<0, AH::HashMapCellWithSavedHash<Key, TMapped, Hash, TState>>
 {
     using type = Key;
 };
 
 template <typename Key, typename TMapped, typename Hash, typename TState>
-struct tuple_element<1, CH::HashMapCellWithSavedHash<Key, TMapped, Hash, TState>>
+struct tuple_element<1, AH::HashMapCellWithSavedHash<Key, TMapped, Hash, TState>>
 {
     using type = TMapped;
 };

@@ -9,7 +9,7 @@
 #include <Common/SipHash.h>
 #include <Common/transformEndianness.h>
 
-namespace CH
+namespace AH
 {
 
 struct IntHash32Impl

@@ -4,7 +4,7 @@
 #include <AggregateFunctions/AggregateFunctionSum.h>
 #include <AggregateFunctions/IAggregateFunction.h>
 
-namespace CH
+namespace AH
 {
 
 AggregateFunctionPtr GetAggregateFunction(AggFunctionId id, const DataTypes & argument_types)

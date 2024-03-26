@@ -3,7 +3,7 @@
 #include <DataStreams/IBlockInputStream.h>
 
 
-namespace CH
+namespace AH
 {
 
 /** A stream of blocks from which you can read the next block from an explicitly provided list.

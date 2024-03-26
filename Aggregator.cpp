@@ -6,7 +6,7 @@
 #include <DataStreams/IBlockInputStream.h>
 
 
-namespace CH
+namespace AH
 {
 
 AggregatedDataVariants::~AggregatedDataVariants()

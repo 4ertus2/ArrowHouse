@@ -23,7 +23,7 @@
 
 #include <Common/PODArray_fwd.h>
 
-namespace CH
+namespace AH
 {
 
 /** Whether we can use memcpy instead of a loop with assignment to T from U.

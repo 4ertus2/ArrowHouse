@@ -33,7 +33,7 @@
 #    define MAP_ANONYMOUS MAP_ANON
 #endif
 
-namespace CH
+namespace AH
 {
 
 /// Get memory page size

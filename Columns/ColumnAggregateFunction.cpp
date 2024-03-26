@@ -10,7 +10,7 @@
 #include <Common/HashTable/Hash.h>
 
 
-namespace CH
+namespace AH
 {
 
 std::shared_ptr<arrow::Array> DataTypeAggregateFunction::MakeArray(std::shared_ptr<arrow::ArrayData> data) const

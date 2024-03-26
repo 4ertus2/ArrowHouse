@@ -1,7 +1,7 @@
 #pragma once
 #include <arrow/api.h>
 
-namespace CHY
+namespace AHY
 {
 
 template <typename T>

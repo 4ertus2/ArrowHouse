@@ -13,7 +13,7 @@
   * Also, key must be of type, that zero bytes is compared equals to zero key.
   */
 
-namespace CH
+namespace AH
 {
 
 template <

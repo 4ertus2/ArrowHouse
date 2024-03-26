@@ -5,7 +5,7 @@
 #include <common/types.h>
 #include <common/wide_integer.h>
 
-namespace CH
+namespace AH
 {
 
 using Int128 = wide::integer<128, signed>;

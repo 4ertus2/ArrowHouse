@@ -11,7 +11,7 @@
 #include <Common/Allocator_fwd.h>
 #include <common/types.h>
 
-namespace CH
+namespace AH
 {
 
 inline constexpr size_t integerRoundUp(size_t value, size_t dividend)

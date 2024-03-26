@@ -3,7 +3,7 @@
 #include <string.h>
 #include <type_traits>
 
-namespace CH
+namespace AH
 {
 
 template <typename T>

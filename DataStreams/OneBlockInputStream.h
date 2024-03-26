@@ -6,7 +6,7 @@
 #include "arrow_clickhouse_types.h"
 #include <DataStreams/IBlockInputStream.h>
 
-namespace CH
+namespace AH
 {
 
 /** A stream of blocks from which you can read one block.

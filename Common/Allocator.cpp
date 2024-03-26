@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <Common/Allocator.h>
 
-namespace CH
+namespace AH
 {
 
 int64_t getPageSize()

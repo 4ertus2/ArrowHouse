@@ -17,7 +17,7 @@
 #include <Columns/ColumnAggregateFunction.h>
 #include <DataStreams/IBlockStream_fwd.h>
 
-namespace CH
+namespace AH
 {
 
 /** Different data structures that can be used for aggregation

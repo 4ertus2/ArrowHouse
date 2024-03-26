@@ -5,7 +5,7 @@
 #include <DataStreams/AggregatingBlockInputStream.h>
 #include <DataStreams/OneBlockInputStream.h>
 
-namespace CH
+namespace AH
 {
 
 /** Combines aggregation states together, turns them into blocks, and outputs streams.

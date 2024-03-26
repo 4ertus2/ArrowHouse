@@ -7,7 +7,7 @@
   * This file provides forward declarations for Allocator.
   */
 
-namespace CH
+namespace AH
 {
 
 template <bool clear_memory_, bool mmap_populate = false>

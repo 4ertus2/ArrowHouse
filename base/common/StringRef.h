@@ -19,7 +19,7 @@
     #include <nmmintrin.h>
 #endif
 
-namespace CH
+namespace AH
 {
 
 /**
@@ -190,15 +190,15 @@ struct StringRefHash {
 namespace std
 {
     template <>
-    struct hash<CH::StringRef> : public CH::StringRefHash {};
+    struct hash<AH::StringRef> : public AH::StringRefHash {};
 }
 
 
 namespace ZeroTraits
 {
-    inline bool check(const CH::StringRef & x) { return 0 == x.size; }
-    inline void set(CH::StringRef & x) { x.size = 0; }
+    inline bool check(const AH::StringRef & x) { return 0 == x.size; }
+    inline void set(AH::StringRef & x) { x.size = 0; }
 }
 
 
-std::ostream & operator<<(std::ostream & os, const CH::StringRef & str);
+std::ostream & operator<<(std::ostream & os, const AH::StringRef & str);

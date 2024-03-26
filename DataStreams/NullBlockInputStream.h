@@ -3,7 +3,7 @@
 #include <DataStreams/IBlockInputStream.h>
 
 
-namespace CH
+namespace AH
 {
 
 /// Empty stream of blocks of specified structure.

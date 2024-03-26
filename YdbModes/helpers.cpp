@@ -11,10 +11,10 @@
 #include <arrow/compute/api.h>
 #include "ReplaceKey.h"
 
-namespace CHY
+namespace AHY
 {
 
-using CH::BlockInputStreams;
+using AH::BlockInputStreams;
 
 namespace
 {
@@ -176,7 +176,7 @@ MakeBuilders(const std::shared_ptr<arrow::Schema> & schema, size_t reserve, cons
         {
             auto it = sizeByColumn.find(field->name());
             if (it != sizeByColumn.end())
-                AFL_VERIFY(CHY::ReserveData(*builder, it->second))("size", it->second)("field", field->name());
+                AFL_VERIFY(AHY::ReserveData(*builder, it->second))("size", it->second)("field", field->name());
         }
 #endif
         if (reserve)
@@ -302,7 +302,7 @@ std::shared_ptr<arrow::UInt64Array>
 MakeSortPermutation(const std::shared_ptr<arrow::RecordBatch> & batch, const std::shared_ptr<arrow::Schema> & sortingKey)
 {
     auto keyBatch = ExtractColumns(batch, sortingKey);
-    auto keyColumns = std::make_shared<CHY::ArrayVec>(keyBatch->columns());
+    auto keyColumns = std::make_shared<AHY::ArrayVec>(keyBatch->columns());
     std::vector<RawReplaceKey> points;
     points.reserve(keyBatch->num_rows());
 
@@ -355,9 +355,9 @@ CombineSortedBatches(const std::vector<std::shared_ptr<arrow::RecordBatch>> & ba
 {
     BlockInputStreams streams;
     for (auto & batch : batches)
-        streams.push_back(std::make_shared<CH::OneBlockInputStream>(batch));
+        streams.push_back(std::make_shared<AH::OneBlockInputStream>(batch));
 
-    auto mergeStream = std::make_shared<CHY::MergingSortedInputStream>(streams, description, std::numeric_limits<uint64_t>::max());
+    auto mergeStream = std::make_shared<AHY::MergingSortedInputStream>(streams, description, std::numeric_limits<uint64_t>::max());
     std::shared_ptr<arrow::RecordBatch> batch = mergeStream->read();
     return batch;
 }
@@ -375,14 +375,14 @@ std::vector<std::shared_ptr<arrow::RecordBatch>> MergeSortedBatches(
         if (batch->num_rows())
         {
             num_rows += batch->num_rows();
-            streams.push_back(std::make_shared<CH::OneBlockInputStream>(batch));
+            streams.push_back(std::make_shared<AH::OneBlockInputStream>(batch));
         }
     }
 
     std::vector<std::shared_ptr<arrow::RecordBatch>> out;
     out.reserve(num_rows / max_batch_rows + 1);
 
-    auto merge_stream = std::make_shared<CHY::MergingSortedInputStream>(streams, description, max_batch_rows);
+    auto merge_stream = std::make_shared<AHY::MergingSortedInputStream>(streams, description, max_batch_rows);
     while (std::shared_ptr<arrow::RecordBatch> batch = merge_stream->read())
         out.push_back(batch);
     return out;

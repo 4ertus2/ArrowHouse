@@ -9,7 +9,7 @@
 #include <DataStreams/IBlockStream_fwd.h>
 #include <DataStreams/IBlockInputStream.h>
 
-namespace CH
+namespace AH
 {
 
 /** Aggregates the stream of blocks using the specified key columns and aggregate functions.

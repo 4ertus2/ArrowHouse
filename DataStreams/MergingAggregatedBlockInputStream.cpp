@@ -5,7 +5,7 @@
 #include <DataStreams/MergingAggregatedBlockInputStream.h>
 
 
-namespace CH
+namespace AH
 {
 
 Header MergingAggregatedBlockInputStream::getHeader() const

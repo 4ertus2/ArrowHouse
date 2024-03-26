@@ -18,7 +18,7 @@
 #endif
 
 
-namespace CH
+namespace AH
 {
 
 /// When packing the values of nullable columns at a given row, we have to

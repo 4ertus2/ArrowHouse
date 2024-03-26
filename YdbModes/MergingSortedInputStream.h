@@ -6,10 +6,10 @@
 #include "DataStreams/IBlockInputStream.h"
 #include "SortCursor.h"
 
-namespace CHY
+namespace AHY
 {
 
-using namespace CH;
+using namespace AH;
 
 struct IRowsBuffer
 {

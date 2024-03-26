@@ -12,7 +12,7 @@
 
 /// Common helper methods for implementation of different columns.
 
-namespace CH
+namespace AH
 {
 
 /// Counts how many bytes of `filt` are greater than zero.

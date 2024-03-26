@@ -1,7 +1,7 @@
 #include <YdbModes/CheckSortedBlockInputStream.h>
 #include <YdbModes/helpers.h>
 
-namespace CHY
+namespace AHY
 {
 
 template <typename T, typename U>
@@ -40,7 +40,7 @@ Block CheckSortedBlockInputStream::readImpl()
         return block;
 
     size_t rows = block->num_rows();
-    auto sort_block = CHY::ExtractColumns(block, sort_description.sorting_key);
+    auto sort_block = AHY::ExtractColumns(block, sort_description.sorting_key);
     auto & columns = sort_block->columns();
 
     if (last_row && std::is_gt(compare(last_row->ToRaw(), RawReplaceKey(&columns, 0), sort_description)))

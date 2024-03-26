@@ -7,7 +7,7 @@
 #include <DataStreams/ParallelInputsProcessor.h>
 
 
-namespace CH
+namespace AH
 {
 
 /** Merges several sources into one.
