@@ -17,7 +17,7 @@ static std::unique_ptr<parquet::arrow::FileReader> makeArrowReader(
     return *reader_builder.Build();
 }
 
-ParquetArrowInputStream::ParquetArrowInputStream(
+ParquetBlockInputStream::ParquetBlockInputStream(
     std::shared_ptr<arrow::io::RandomAccessFile> file_,
     const std::vector<int> & rg_indices,
     const std::vector<int> & column_indices,
@@ -38,7 +38,7 @@ ParquetArrowInputStream::ParquetArrowInputStream(
         arrow_reader->GetRecordBatchReader(rg_indices, column_indices, &batch_reader).ok();
 }
 
-Block ParquetArrowInputStream::readImpl()
+Block ParquetBlockInputStream::readImpl()
 {
     if (!batch_reader)
         return {};

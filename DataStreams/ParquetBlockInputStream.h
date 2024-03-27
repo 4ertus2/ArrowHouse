@@ -6,10 +6,10 @@
 namespace AH
 {
 
-class ParquetArrowInputStream : public IBlockInputStream
+class ParquetBlockInputStream : public IBlockInputStream
 {
 public:
-    ParquetArrowInputStream(
+    ParquetBlockInputStream(
         std::shared_ptr<arrow::io::RandomAccessFile> file_,
         const std::vector<int> & rg_indices = {},
         const std::vector<int> & column_indices = {},
