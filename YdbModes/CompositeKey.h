@@ -44,7 +44,8 @@ public:
     {
         for (int i = 0; i < Size(); ++i)
         {
-            auto cmp = CompareColumnValue(i, key, i);
+            bool haveNulls = ColumnHasNulls(i) || key.ColumnHasNulls(i);
+            auto cmp = haveNulls ? CompareColumnValue(i, key, i) : CompareColumnValueNotNull(i, key, i);
             if (std::is_neq(cmp))
                 return false;
         }
@@ -56,7 +57,8 @@ public:
     {
         for (int i = 0; i < Size(); ++i)
         {
-            auto cmp = CompareColumnValue(i, key, i);
+            bool haveNulls = ColumnHasNulls(i) || key.ColumnHasNulls(i);
+            auto cmp = haveNulls ? CompareColumnValue(i, key, i) : CompareColumnValueNotNull(i, key, i);
             if (std::is_neq(cmp))
                 return cmp;
         }
@@ -103,6 +105,7 @@ public:
     int GetPosition() const { return position; }
     const arrow::Array & Column(int i) const { return *(*columns)[i]; }
     std::shared_ptr<arrow::Array> ColumnPtr(int i) const { return (*columns)[i]; }
+    bool ColumnHasNulls(int i) const { return ColumnPtr(i)->null_bitmap_data(); }
 
     TCompositeKey<const ArrayVec *> ToRaw() const
     {
