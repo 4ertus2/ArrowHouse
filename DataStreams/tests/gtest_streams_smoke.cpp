@@ -107,14 +107,16 @@ TEST(CheckSortedBlockInputStream, StreamSmoke)
     std::shared_ptr<arrow::RecordBatch> batch = TestBatch();
     auto one = std::make_shared<OneBlockInputStream>(batch);
 
-    AHY::SortDescription sort_descr;
-    sort_descr.sorting_key = batch->schema();
-    sort_descr.directions = {1};
+    AH::SortDescription sort_descr;
+    for (auto & field : batch->schema()->fields()) {
+        SortColumnDescription col_descr{field->name(), 1};
+        sort_descr.push_back(col_descr);
+    }
 
     auto check = std::make_shared<AHY::CheckSortedBlockInputStream>(one, sort_descr);
     check->read();
 
-    sort_descr.directions = {-1};
+    sort_descr[0].direction = -1;
     check = std::make_shared<AHY::CheckSortedBlockInputStream>(one, sort_descr);
     check->read();
 }

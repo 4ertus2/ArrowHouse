@@ -3,9 +3,9 @@
 // See: https://github.com/ClickHouse/ClickHouse/
 
 #include "MergingSortedInputStream.h"
+#include <queue>
 #include "helpers.h"
 #include "switch_type.h"
-#include <queue>
 
 namespace AHY
 {
@@ -99,7 +99,10 @@ private:
 };
 
 MergingSortedInputStream::MergingSortedInputStream(
-    const std::vector<BlockInputStreamPtr> & inputs, std::shared_ptr<SortDescription> description_, size_t max_batch_rows_, bool slice)
+    const std::vector<BlockInputStreamPtr> & inputs,
+    std::shared_ptr<ReplaceSortDescription> description_,
+    size_t max_batch_rows_,
+    bool slice)
     : description(description_)
     , max_batch_size(max_batch_rows_)
     , slice_sources(slice)

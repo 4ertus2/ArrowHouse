@@ -1,15 +1,12 @@
-// The code in this file is based on original ClickHouse source code
-// which is licensed under Apache license v2.0
-// See: https://github.com/ClickHouse/ClickHouse/
-
 #pragma once
 #include <arrow/api.h>
+#include <Common/SortDescription.h>
 
 namespace AHY
 {
 
 /// Description of the sorting rule for several columns.
-struct SortDescription
+struct ReplaceSortDescription
 {
     /// @note In case you have PK and snapshot column you should sort with {ASC PK, DESC snap} key and replase with PK
     std::shared_ptr<arrow::Schema> sorting_key;
@@ -18,9 +15,21 @@ struct SortDescription
     bool not_null{false};
     bool reverse{false}; // Read sources from bottom to top. With inversed directions leads to DESC dst for ASC src
 
-    SortDescription() = default;
+    ReplaceSortDescription(const AH::SortDescription & sort_desrc, const std::shared_ptr<arrow::Schema> & schema)
+    {
+        std::vector<std::shared_ptr<arrow::Field>> fields;
+        fields.reserve(sort_desrc.size());
+        directions.reserve(sort_desrc.size());
 
-    SortDescription(const std::shared_ptr<arrow::Schema> & sortingKey, const std::shared_ptr<arrow::Schema> & replaceKey = {})
+        for (auto & col_descr : sort_desrc)
+        {
+            fields.push_back(schema->GetFieldByName(col_descr.column_name));
+            directions.push_back(col_descr.direction);
+        }
+        sorting_key = std::make_shared<arrow::Schema>(fields);
+    }
+
+    ReplaceSortDescription(const std::shared_ptr<arrow::Schema> & sortingKey, const std::shared_ptr<arrow::Schema> & replaceKey = {})
         : sorting_key(sortingKey), replace_key(replaceKey), directions(sortingKey->num_fields(), 1)
     {
     }

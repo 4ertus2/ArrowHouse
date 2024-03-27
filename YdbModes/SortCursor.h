@@ -7,7 +7,7 @@
 #include <arrow/api.h>
 
 #include <YdbModes/CompositeKey.h>
-#include <YdbModes/SortDescription.h>
+#include <YdbModes/ReplaceSortDescription.h>
 #include <YdbModes/helpers.h>
 #include <Common/projection.h>
 
@@ -19,7 +19,7 @@ namespace AHY
 struct SortCursorImpl
 {
     std::shared_ptr<ArrayVec> sort_columns;
-    std::shared_ptr<SortDescription> desc;
+    std::shared_ptr<ReplaceSortDescription> desc;
     uint32_t order = 0; // Number of cursor. It determines an order if comparing columns are equal.
     //
     std::shared_ptr<arrow::RecordBatch> current_batch;
@@ -28,7 +28,7 @@ struct SortCursorImpl
 
     SortCursorImpl() = default;
 
-    SortCursorImpl(std::shared_ptr<arrow::RecordBatch> batch, std::shared_ptr<SortDescription> desc_, uint32_t order_ = 0)
+    SortCursorImpl(std::shared_ptr<arrow::RecordBatch> batch, std::shared_ptr<ReplaceSortDescription> desc_, uint32_t order_ = 0)
         : desc(desc_), order(order_)
     {
         Reset(batch);

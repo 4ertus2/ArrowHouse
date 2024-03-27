@@ -1,7 +1,7 @@
 #pragma once
 #include <DataStreams/IBlockInputStream.h>
 #include <YdbModes/CompositeKey.h>
-#include <YdbModes/SortDescription.h>
+#include <Common/SortDescription.h>
 
 #include <optional>
 

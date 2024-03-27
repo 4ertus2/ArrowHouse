@@ -1,6 +1,6 @@
-#include <Common/projection.h>
 #include <YdbModes/CheckSortedBlockInputStream.h>
 #include <YdbModes/helpers.h>
+#include <Common/projection.h>
 
 namespace AHY
 {
@@ -8,13 +8,14 @@ namespace AHY
 template <typename T, typename U>
 static std::partial_ordering compare(const T & left, const U & right, const SortDescription & sort_description)
 {
-    size_t num_fields = sort_description.sorting_key->num_fields();
+    size_t num_fields = sort_description.size();
     for (size_t i = 0; i < num_fields; ++i)
     {
-        std::partial_ordering cmp = left.CompareColumnValue(i, right, i);
+        bool haveNulls = left.ColumnHasNulls(i) || right.ColumnHasNulls(i);
+        auto cmp = haveNulls ? left.CompareColumnValue(i, right, i) : left.CompareColumnValueNotNull(i, right, i);
         if (std::is_neq(cmp))
         {
-            if (i < sort_description.directions.size() && sort_description.directions[i] < 0)
+            if (sort_description[i].direction < 0)
                 return std::is_lt(cmp) ? std::partial_ordering::greater : std::partial_ordering::less;
             return cmp;
         }
@@ -25,10 +26,6 @@ static std::partial_ordering compare(const T & left, const U & right, const Sort
 CheckSortedBlockInputStream::CheckSortedBlockInputStream(const BlockInputStreamPtr & input_, const SortDescription & sort_description_)
     : header(input_->getHeader()), sort_description(sort_description_)
 {
-    size_t num_fields = sort_description.sorting_key->num_fields();
-    if (sort_description.directions.size() > num_fields)
-        sort_description.directions.resize(num_fields);
-
     children.push_back(input_);
 }
 
@@ -41,7 +38,7 @@ Block CheckSortedBlockInputStream::readImpl()
         return block;
 
     size_t rows = block->num_rows();
-    auto sort_block = AH::projection(block, sort_description.sorting_key, false);
+    auto sort_block = AH::projection(block, sort_description, false);
     auto & columns = sort_block->columns();
 
     if (last_row && std::is_gt(compare(last_row->ToRaw(), RawCompositeKey(&columns, 0), sort_description)))

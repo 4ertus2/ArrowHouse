@@ -257,9 +257,11 @@ std::shared_ptr<arrow::UInt64Array> MakeUI64Array(uint64_t value, int64_t size)
 }
 
 std::shared_ptr<arrow::UInt64Array>
-MakeSortPermutation(const std::shared_ptr<arrow::RecordBatch> & batch, const std::shared_ptr<arrow::Schema> & sortingKey)
+MakeSortPermutation(const std::shared_ptr<arrow::RecordBatch> & batch, const AH::SortDescription & sort_descr)
 {
-    auto keyBatch = projection(batch, sortingKey, false);
+    // TODO: support directions
+
+    auto keyBatch = projection(batch, sort_descr, false);
     auto keyColumns = std::make_shared<AHY::ArrayVec>(keyBatch->columns());
     std::vector<RawCompositeKey> points;
     points.reserve(keyBatch->num_rows());
@@ -310,8 +312,8 @@ bool ReserveData(arrow::ArrayBuilder & builder, const size_t size)
     return result.ok();
 }
 
-std::shared_ptr<arrow::RecordBatch>
-CombineSortedBatches(const std::vector<std::shared_ptr<arrow::RecordBatch>> & batches, const std::shared_ptr<SortDescription> & description)
+std::shared_ptr<arrow::RecordBatch> CombineSortedBatches(
+    const std::vector<std::shared_ptr<arrow::RecordBatch>> & batches, const std::shared_ptr<ReplaceSortDescription> & description)
 {
     BlockInputStreams streams;
     for (auto & batch : batches)
@@ -324,7 +326,7 @@ CombineSortedBatches(const std::vector<std::shared_ptr<arrow::RecordBatch>> & ba
 
 std::vector<std::shared_ptr<arrow::RecordBatch>> MergeSortedBatches(
     const std::vector<std::shared_ptr<arrow::RecordBatch>> & batches,
-    const std::shared_ptr<SortDescription> & description,
+    const std::shared_ptr<ReplaceSortDescription> & description,
     size_t max_batch_rows)
 {
     uint64_t num_rows = 0;

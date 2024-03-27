@@ -1,7 +1,23 @@
+#include <Common/SortDescription.h>
 #include <Common/projection.h>
 
 namespace AH
 {
+
+static int columnIndexByName(const Header & schema, const std::string & name)
+{
+    return schema->GetFieldIndex(name);
+}
+
+static int columnIndexByName(const Header & schema, std::shared_ptr<arrow::Field> field)
+{
+    return schema->GetFieldIndex(field->name());
+}
+
+static int columnIndexByName(const Header & schema, const SortColumnDescription & col_descr)
+{
+    return schema->GetFieldIndex(col_descr.column_name);
+}
 
 Header projection(const Header & src_schema, const Names & column_names, bool throw_if_column_not_found)
 {
@@ -20,16 +36,6 @@ Header projection(const Header & src_schema, const Names & column_names, bool th
     }
 
     return std::make_shared<arrow::Schema>(std::move(fields));
-}
-
-static int columnIndexByName(const Header & schema, const std::string & name)
-{
-    return schema->GetFieldIndex(name);
-}
-
-static int columnIndexByName(const Header & schema, std::shared_ptr<arrow::Field> field)
-{
-    return schema->GetFieldIndex(field->name());
 }
 
 template <typename T>
@@ -65,6 +71,11 @@ Block projection(const Block & src_batch, const Names & dst_schema, bool throw_i
 Block projection(const Block & src_batch, const Header & dst_schema, bool throw_if_column_not_found)
 {
     return projectionImpl(src_batch, dst_schema->fields(), throw_if_column_not_found);
+}
+
+Block projection(const Block & src_batch, const SortDescription & sort_descr, bool throw_if_column_not_found)
+{
+    return projectionImpl(src_batch, sort_descr, throw_if_column_not_found);
 }
 
 }

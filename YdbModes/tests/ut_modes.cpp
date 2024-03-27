@@ -407,7 +407,14 @@ TEST(SortWithCompositeKey, YdbModes)
     EXPECT_EQ(batch->num_rows(), 1000);
     EXPECT_TRUE(!CheckSorted1000(batch));
 
-    auto sortPermutation = AHY::MakeSortPermutation(batch, table->schema());
+    AH::SortDescription sort_descr;
+    sort_descr.reserve(table->schema()->num_fields());
+    for (auto & field : table->schema()->fields()) {
+        AH::SortColumnDescription col_descr{field->name(), 1};
+        sort_descr.push_back(col_descr);
+    }
+
+    auto sortPermutation = AHY::MakeSortPermutation(batch, sort_descr);
 
     auto res = arrow::compute::Take(batch, sortPermutation);
     EXPECT_TRUE(res.ok());
@@ -429,8 +436,14 @@ TEST(SortingBlockInputStream, YdbModes)
 
     auto one = std::make_shared<OneBlockInputStream>(batch);
 
-    auto descr = std::make_shared<AHY::SortDescription>(batch->schema());
-    auto stream = std::make_shared<AHY::SortingBlockInputStream>(one, *descr);
+    AH::SortDescription sort_descr;
+    sort_descr.reserve(table->schema()->num_fields());
+    for (auto & field : table->schema()->fields()) {
+        AH::SortColumnDescription col_descr{field->name(), 1};
+        sort_descr.push_back(col_descr);
+    }
+
+    auto stream = std::make_shared<AHY::SortingBlockInputStream>(one, sort_descr);
     auto sorted = stream->read();
     EXPECT_EQ(sorted->num_rows(), 1000);
     EXPECT_TRUE(CheckSorted1000(sorted));
@@ -448,7 +461,7 @@ TEST(MergingSortedInputStream, YdbModes)
     batches.push_back(batch->Slice(500, 50)); // 500..550
     batches.push_back(batch->Slice(600, 1)); // 600..601
 
-    auto descr = std::make_shared<AHY::SortDescription>(batch->schema());
+    auto descr = std::make_shared<AHY::ReplaceSortDescription>(batch->schema());
     descr->not_null = true;
 
     std::vector<std::shared_ptr<arrow::RecordBatch>> sorted;
@@ -485,7 +498,7 @@ TEST(MergingSortedInputStreamReversed, YdbModes)
     batches.push_back(batch->Slice(500, 50)); // 500..550
     batches.push_back(batch->Slice(600, 1)); // 600..601
 
-    auto descr = std::make_shared<AHY::SortDescription>(batch->schema());
+    auto descr = std::make_shared<AHY::ReplaceSortDescription>(batch->schema());
     descr->not_null = true;
     descr->Inverse();
 
@@ -525,7 +538,7 @@ TEST(MergingSortedInputStreamReplace, YdbModes)
     auto sortingKey = batches[0]->schema();
     auto replaceKey = batch->schema();
 
-    auto descr = std::make_shared<AHY::SortDescription>(sortingKey, replaceKey);
+    auto descr = std::make_shared<AHY::ReplaceSortDescription>(sortingKey, replaceKey);
     descr->directions.back() = -1; // greater snapshot first
     descr->not_null = true;
 
@@ -567,7 +580,7 @@ TEST(MergingSortedInputStreamReplaceReversed, YdbModes)
     auto sortingKey = batches[0]->schema();
     auto replaceKey = batch->schema();
 
-    auto descr = std::make_shared<AHY::SortDescription>(sortingKey, replaceKey);
+    auto descr = std::make_shared<AHY::ReplaceSortDescription>(sortingKey, replaceKey);
     descr->directions.back() = 1; // greater snapshot last
     descr->not_null = true;
     descr->Inverse();

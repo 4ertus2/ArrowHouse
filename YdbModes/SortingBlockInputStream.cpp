@@ -12,7 +12,7 @@ Block SortingBlockInputStream::readImpl()
     if (!block || block->num_rows() == 0)
         return block;
 
-    auto permutation = AHY::MakeSortPermutation(block, description.sorting_key);
+    auto permutation = AHY::MakeSortPermutation(block, description);
     if (AHY::IsTrivialPermutation(*permutation))
         return block;
 

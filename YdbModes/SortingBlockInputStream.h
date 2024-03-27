@@ -1,7 +1,7 @@
 #pragma once
 
 #include <DataStreams/IBlockInputStream.h>
-#include <YdbModes/SortDescription.h>
+#include <Common/SortDescription.h>
 
 
 namespace AHY
@@ -15,8 +15,8 @@ public:
     SortingBlockInputStream(const BlockInputStreamPtr & input_, const SortDescription & description_)
         : description(description_)
     {
-        for (auto & dir : description.directions)
-            if (dir != 1)
+        for (auto & col_descr : description)
+            if (col_descr.direction != 1)
                 throw std::runtime_error("sort directions are not supported");
         children.push_back(input_);
     }

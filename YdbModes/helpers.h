@@ -1,6 +1,7 @@
 #pragma once
 
 #include <YdbModes/switch_type.h>
+#include <Common/SortDescription.h>
 
 #include <map>
 #include <arrow/api.h>
@@ -8,7 +9,7 @@
 namespace AHY
 {
 
-struct SortDescription;
+struct ReplaceSortDescription;
 
 inline bool HasNulls(const std::shared_ptr<arrow::Array> & column)
 {
@@ -26,7 +27,7 @@ std::shared_ptr<arrow::UInt64Array> MakeUI64Array(uint64_t value, int64_t size);
 bool ReserveData(arrow::ArrayBuilder & builder, const size_t size);
 
 std::shared_ptr<arrow::UInt64Array>
-MakeSortPermutation(const std::shared_ptr<arrow::RecordBatch> & batch, const std::shared_ptr<arrow::Schema> & sortingKey);
+MakeSortPermutation(const std::shared_ptr<arrow::RecordBatch> & batch, const AH::SortDescription & sort_descr);
 bool IsTrivialPermutation(const arrow::UInt64Array & permutation);
 bool IsSorted(const std::shared_ptr<arrow::RecordBatch> & batch, const std::shared_ptr<arrow::Schema> & sortingKey, bool desc = false);
 bool IsSortedAndUnique(
@@ -38,10 +39,10 @@ uint64_t GetBatchDataSize(const std::shared_ptr<arrow::RecordBatch> & batch);
 uint64_t GetArrayDataSize(const std::shared_ptr<arrow::Array> & column);
 
 std::shared_ptr<arrow::RecordBatch> CombineSortedBatches(
-    const std::vector<std::shared_ptr<arrow::RecordBatch>> & batches, const std::shared_ptr<SortDescription> & description);
+    const std::vector<std::shared_ptr<arrow::RecordBatch>> & batches, const std::shared_ptr<ReplaceSortDescription> & description);
 std::vector<std::shared_ptr<arrow::RecordBatch>> MergeSortedBatches(
     const std::vector<std::shared_ptr<arrow::RecordBatch>> & batches,
-    const std::shared_ptr<SortDescription> & description,
+    const std::shared_ptr<ReplaceSortDescription> & description,
     size_t maxBatchRows);
 
 bool MergeBatchColumns(

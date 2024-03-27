@@ -25,7 +25,7 @@ class MergingSortedInputStream : public IBlockInputStream
 public:
     MergingSortedInputStream(
         const std::vector<BlockInputStreamPtr> & inputs,
-        std::shared_ptr<SortDescription> description,
+        std::shared_ptr<ReplaceSortDescription> description,
         size_t maxBatchRows,
         bool slice = false);
 
@@ -37,7 +37,7 @@ protected:
 
 private:
     std::shared_ptr<arrow::Schema> header;
-    std::shared_ptr<SortDescription> description;
+    std::shared_ptr<ReplaceSortDescription> description;
     const uint64_t max_batch_size;
     const bool slice_sources;
     bool first = true;
