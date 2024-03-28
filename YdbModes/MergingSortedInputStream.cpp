@@ -2,10 +2,13 @@
 // which is licensed under Apache license v2.0
 // See: https://github.com/ClickHouse/ClickHouse/
 
-#include "MergingSortedInputStream.h"
+#include <DataStreams/OneBlockInputStream.h>
+#include <YdbModes/MergingSortedInputStream.h>
+#include <YdbModes/helpers.h>
+#include <YdbModes/switch_type.h>
+
 #include <queue>
-#include "helpers.h"
-#include "switch_type.h"
+
 
 namespace AHY
 {
@@ -111,6 +114,22 @@ MergingSortedInputStream::MergingSortedInputStream(
 {
     children.insert(children.end(), inputs.begin(), inputs.end());
     header = children.at(0)->getHeader();
+}
+
+MergingSortedInputStream::MergingSortedInputStream(
+    const std::vector<Block> & blocks_, const SortDescription & description_, size_t max_merged_block_size_)
+    : max_batch_size(max_merged_block_size_), slice_sources(false)
+{
+    children.reserve(blocks_.size());
+    for (const auto & block : blocks_)
+        if (block->num_rows() > 0)
+            children.emplace_back(std::make_shared<OneBlockInputStream>(block));
+
+    source_batches.resize(children.size());
+    cursors.resize(children.size());
+    header = children.at(0)->getHeader();
+
+    description = std::make_shared<ReplaceSortDescription>(description_, header);
 }
 
 /// Read the first blocks, initialize the queue.

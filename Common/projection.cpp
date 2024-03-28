@@ -1,4 +1,3 @@
-#include <Common/SortDescription.h>
 #include <Common/projection.h>
 
 namespace AH
@@ -19,23 +18,34 @@ static int columnIndexByName(const Header & schema, const SortColumnDescription 
     return schema->GetFieldIndex(col_descr.column_name);
 }
 
-Header projection(const Header & src_schema, const Names & column_names, bool throw_if_column_not_found)
+template <typename T>
+Header projectionImpl(const Header & src_schema, const std::vector<T> & column_names, bool throw_if_column_not_found)
 {
     std::vector<std::shared_ptr<arrow::Field>> fields;
     fields.reserve(column_names.size());
     for (auto & name : column_names)
     {
-        int pos = src_schema->GetFieldIndex(name);
+        int pos = columnIndexByName(src_schema, name);
         if (pos < 0)
         {
             if (throw_if_column_not_found)
-                throw std::runtime_error("no column " + name + " in batch " + src_schema->ToString());
+                throw std::runtime_error("no column in block " + src_schema->ToString());
             continue;
         }
         fields.push_back(src_schema->field(pos));
     }
 
     return std::make_shared<arrow::Schema>(std::move(fields));
+}
+
+Header projection(const Header & src_schema, const Names & column_names, bool throw_if_column_not_found)
+{
+    return projectionImpl(src_schema, column_names, throw_if_column_not_found);
+}
+
+Header projection(const Header & src_schema, const SortDescription & sort_descr, bool throw_if_column_not_found)
+{
+    return projectionImpl(src_schema, sort_descr, throw_if_column_not_found);
 }
 
 template <typename T>

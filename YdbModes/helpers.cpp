@@ -1,5 +1,6 @@
 #include <DataStreams/IBlockStream_fwd.h>
 #include <DataStreams/OneBlockInputStream.h>
+#include <YdbModes/CheckSortedBlockInputStream.h>
 #include <YdbModes/CompositeKey.h>
 #include <YdbModes/MergingSortedInputStream.h>
 #include <YdbModes/SortCursor.h>
@@ -116,6 +117,20 @@ bool IsSortedAndUnique(const std::shared_ptr<arrow::RecordBatch> & batch, const 
         return IsSelfSorted<true, true>(keyBatch);
     else
         return IsSelfSorted<false, true>(keyBatch);
+}
+
+bool IsSorted(const std::shared_ptr<arrow::RecordBatch> & batch, const AH::SortDescription & sort_descr)
+{
+    // TODO: improve
+    try
+    {
+        AHY::CheckSortedBlockInputStream(std::make_shared<OneBlockInputStream>(batch), sort_descr).read();
+    }
+    catch (std::exception &)
+    {
+        return false;
+    }
+    return true;
 }
 
 

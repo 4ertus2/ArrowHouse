@@ -1,5 +1,7 @@
 #include <DataStreams/IBlockStream_fwd.h>
 #include <DataStreams/OneBlockInputStream.h>
+#include <DataStreams/ConcatBlockInputStream.h>
+#include <DataStreams/MergeSortingBlockInputStream.h>
 #include <YdbModes/MergingSortedInputStream.h>
 #include <YdbModes/SortingBlockInputStream.h>
 #include <YdbModes/helpers.h>
@@ -607,6 +609,47 @@ TEST(MergingSortedInputStreamReplaceReversed, YdbModes)
     EXPECT_EQ(counts[1], 200);
     EXPECT_EQ(counts[2], 200);
     EXPECT_EQ(counts[3], 400);
+}
+
+TEST(MergeSortingInputStream, YdbModes)
+{
+    std::shared_ptr<arrow::RecordBatch> batch = ExtractBatch(MakeTable1000());
+    EXPECT_TRUE(CheckSorted1000(batch));
+
+    std::vector<std::shared_ptr<arrow::RecordBatch>> batches;
+    batches.push_back(batch->Slice(0, 100)); // 0..100
+    batches.push_back(batch->Slice(100, 200)); // 100..300
+    batches.push_back(batch->Slice(200, 400)); // 200..600
+    batches.push_back(batch->Slice(500, 50)); // 500..550
+    batches.push_back(batch->Slice(600, 1)); // 600..601
+
+    AH::SortDescription sort_descr;
+    sort_descr.reserve(batch->num_columns());
+    for (auto & field : batch->schema()->fields()) {
+        AH::SortColumnDescription col_descr{field->name(), 1};
+        sort_descr.push_back(col_descr);
+    }
+
+    std::vector<std::shared_ptr<arrow::RecordBatch>> sorted;
+    { // maxBatchSize = 500, no limit
+        std::vector<BlockInputStreamPtr> streams;
+        for (auto & batch : batches)
+            streams.push_back(std::make_shared<OneBlockInputStream>(batch));
+        auto s = std::make_shared<AH::ConcatBlockInputStream>(streams);
+
+        auto mergeStream = std::make_shared<AH::MergeSortingBlockInputStream>(s, sort_descr, 500);
+        while (auto batch = mergeStream->read())
+            sorted.emplace_back(batch);
+    }
+
+    EXPECT_EQ(sorted.size(), 2);
+    EXPECT_EQ(sorted[0]->num_rows(), 500);
+    EXPECT_EQ(sorted[1]->num_rows(), 251);
+    EXPECT_TRUE(CheckSorted(sorted[0]));
+    EXPECT_TRUE(CheckSorted(sorted[1]));
+    EXPECT_TRUE(AHY::IsSorted(sorted[0], sort_descr));
+    EXPECT_TRUE(AHY::IsSorted(sorted[1], sort_descr));
+    EXPECT_TRUE(RestoreOne(sorted[0], 499) <= RestoreOne(sorted[1], 0));
 }
 
 int main(int argc, char ** argv)

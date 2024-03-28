@@ -3,6 +3,7 @@ add_library(
     AggregatingBlockInputStream.cpp
     FilterColumnsBlockInputStream.cpp
     IBlockInputStream.cpp
+    MergeSortingBlockInputStream.cpp
     MergingAggregatedBlockInputStream.cpp
     ReverseBlockInputStream.cpp
     ParquetBlockInputStream.cpp
