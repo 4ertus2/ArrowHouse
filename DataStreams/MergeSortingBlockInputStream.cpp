@@ -9,7 +9,7 @@ using MergingSortedBlockInputStream = AHY::MergingSortedInputStream;
 
 MergeSortingBlockInputStream::MergeSortingBlockInputStream(
     const BlockInputStreamPtr & input,
-    SortDescription & description_,
+    const SortDescription & description_,
     size_t max_merged_block_size_)
     : description(description_)
     , max_merged_block_size(max_merged_block_size_)

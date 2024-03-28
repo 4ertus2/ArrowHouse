@@ -14,7 +14,7 @@ class MergeSortingBlockInputStream : public IBlockInputStream
 {
 public:
     /// limit - if not 0, allowed to return just first 'limit' rows in sorted order.
-    MergeSortingBlockInputStream(const BlockInputStreamPtr & input, SortDescription & description_,
+    MergeSortingBlockInputStream(const BlockInputStreamPtr & input, const SortDescription & description_,
         size_t max_merged_block_size_);
 
     String getName() const override { return "MergeSorting"; }
