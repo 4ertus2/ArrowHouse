@@ -10,11 +10,11 @@ endif()
 
 set(CMAKE_CXX_STANDARD 23)
 
-set(PEDANTIC "-Werror -Wall -Wextra -Wshadow -Wunreachable-code -Wpointer-arith")
-set(IGNORES "-Wno-ignored-attributes -Wno-unused-parameter -Wno-missing-field-initializers -Wno-shadow \
-  -Wno-deprecated-declarations -Wno-redundant-move -Wno-array-bounds")
-set(MUTED_ERRORS "")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pipe ${PEDANTIC} ${MUTED_ERRORS} ${IGNORES}")
+# gcc -Wno-error=stringop-overflow
+set(PEDANTIC "-Werror -Wall -Wextra -Wunreachable-code -Wpointer-arith")
+set(IGNORES "-Wno-ignored-attributes -Wno-unused-parameter -Wno-missing-field-initializers -Wno-switch")
+set(MUTED_ERRORS "-Wno-error=redundant-move -Wno-error=deprecated-declarations -Wno-error=array-bounds")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pipe ${PEDANTIC} ${IGNORES}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe ${PEDANTIC} ${MUTED_ERRORS} ${IGNORES}")
 
 find_package(Arrow REQUIRED PATHS ${ArrowHouse_DEPS_PATH})

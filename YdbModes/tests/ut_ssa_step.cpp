@@ -225,7 +225,9 @@ struct SumData
         EXPECT_EQ(batch->column(1)->type_id(), arrow::Type::UINT64);
         EXPECT_EQ(batch->column(2)->type_id(), arrow::Type::INT16);
         if (numKeys == 2)
+        {
             EXPECT_EQ(batch->column(3)->type_id(), arrow::Type::UINT32);
+        }
 
         if (test == ETest::EMPTY)
         {
