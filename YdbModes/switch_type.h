@@ -89,6 +89,10 @@ TResult SwitchTypeImpl(arrow::Type::type typeId, TFunc && f)
         case arrow::Type::STRUCT:
         case arrow::Type::INTERVAL_MONTH_DAY_NANO:
         case arrow::Type::RUN_END_ENCODED:
+        case arrow::Type::STRING_VIEW:
+        case arrow::Type::BINARY_VIEW:
+        case arrow::Type::LIST_VIEW:
+        case arrow::Type::LARGE_LIST_VIEW:
             break;
     }
 

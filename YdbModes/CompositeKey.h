@@ -242,6 +242,10 @@ private:
             case arrow::Type::SPARSE_UNION:
             case arrow::Type::STRUCT:
             case arrow::Type::RUN_END_ENCODED:
+            case arrow::Type::STRING_VIEW:
+            case arrow::Type::BINARY_VIEW:
+            case arrow::Type::LIST_VIEW:
+            case arrow::Type::LARGE_LIST_VIEW:
                 throw std::runtime_error("not implemented");
         }
         return std::partial_ordering::equivalent;
