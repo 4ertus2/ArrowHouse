@@ -4,11 +4,12 @@
 /// Distributed under the Boost Software License, Version 1.0.
 /// (See at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <cmath>
-#include <cfloat>
 #include <cassert>
-#include <tuple>
+#include <cfloat>
+#include <cmath>
 #include <limits>
+#include <stdexcept>
+#include <tuple>
 
 
 namespace AH::wide
@@ -104,9 +105,7 @@ public:
             ? std::numeric_limits<typename AH::wide::integer<Bits, Signed>::signed_base_type>::max()
             : std::numeric_limits<typename AH::wide::integer<Bits, Signed>::base_type>::max();
         for (unsigned i = 1; i < AH::wide::integer<Bits, Signed>::_impl::item_count; ++i)
-        {
             res.items[T::_impl::big(i)] = std::numeric_limits<typename AH::wide::integer<Bits, Signed>::base_type>::max();
-        }
         return res;
     }
 
@@ -123,11 +122,10 @@ public:
 template <size_t Bits, typename Signed, size_t Bits2, typename Signed2>
 struct common_type<AH::wide::integer<Bits, Signed>, AH::wide::integer<Bits2, Signed2>>
 {
-    using type = std::conditional_t < Bits == Bits2,
-          AH::wide::integer<
-              Bits,
-              std::conditional_t<(std::is_same_v<Signed, Signed2> && std::is_same_v<Signed2, signed>), signed, unsigned>>,
-          std::conditional_t<Bits2<Bits, AH::wide::integer<Bits, Signed>, AH::wide::integer<Bits2, Signed2>>>;
+    using type
+        = std::conditional_t < Bits == Bits2,
+        AH::wide::integer<Bits, std::conditional_t<(std::is_same_v<Signed, Signed2> && std::is_same_v<Signed2, signed>), signed, unsigned>>,
+        std::conditional_t<Bits2<Bits, AH::wide::integer<Bits, Signed>, AH::wide::integer<Bits2, Signed2>>>;
 };
 
 template <size_t Bits, typename Signed, typename Arithmetic>
@@ -296,8 +294,9 @@ struct integer<Bits, Signed>::_impl
         /// int64_t max value precisely.
 
         // TODO Be compatible with Apple aarch64
-#if not (defined(__APPLE__) && defined(__aarch64__))
-        static_assert(LDBL_MANT_DIG >= 64,
+#if not(defined(__APPLE__) && defined(__aarch64__))
+        static_assert(
+            LDBL_MANT_DIG >= 64,
             "On your system long double has less than 64 precision bits, "
             "which may result in UB when initializing double from int64_t");
 #endif
@@ -308,9 +307,7 @@ struct integer<Bits, Signed>::_impl
             return;
         }
 
-        const long double rhs_long_double = (static_cast<long double>(rhs) < 0)
-            ? -static_cast<long double>(rhs)
-            : rhs;
+        const long double rhs_long_double = (static_cast<long double>(rhs) < 0) ? -static_cast<long double>(rhs) : rhs;
 
         set_multiplier(self, rhs_long_double);
 
@@ -319,8 +316,7 @@ struct integer<Bits, Signed>::_impl
     }
 
     template <size_t Bits2, typename Signed2>
-    constexpr static void
-    wide_integer_from_wide_integer(integer<Bits, Signed> & self, const integer<Bits2, Signed2> & rhs) noexcept
+    constexpr static void wide_integer_from_wide_integer(integer<Bits, Signed> & self, const integer<Bits2, Signed2> & rhs) noexcept
     {
         constexpr const unsigned min_bits = (Bits < Bits2) ? Bits : Bits2;
         constexpr const unsigned to_copy = min_bits / base_bits;
@@ -442,8 +438,7 @@ private:
     }
 
     template <typename T>
-    constexpr static integer<Bits, Signed>
-    minus(const integer<Bits, Signed> & lhs, T rhs)
+    constexpr static integer<Bits, Signed> minus(const integer<Bits, Signed> & lhs, T rhs)
     {
         constexpr const unsigned rhs_items = (sizeof(T) > sizeof(base_type)) ? (sizeof(T) / sizeof(base_type)) : 1;
         constexpr const unsigned op_items = (item_count < rhs_items) ? item_count : rhs_items;
@@ -475,8 +470,7 @@ private:
     }
 
     template <typename T>
-    constexpr static integer<Bits, Signed>
-    plus(const integer<Bits, Signed> & lhs, T rhs)
+    constexpr static integer<Bits, Signed> plus(const integer<Bits, Signed> & lhs, T rhs)
     {
         constexpr const unsigned rhs_items = (sizeof(T) > sizeof(base_type)) ? (sizeof(T) / sizeof(base_type)) : 1;
         constexpr const unsigned op_items = (item_count < rhs_items) ? item_count : rhs_items;
@@ -508,8 +502,7 @@ private:
     }
 
     template <typename T>
-    constexpr static integer<Bits, Signed>
-    multiply(const integer<Bits, Signed> & lhs, const T & rhs)
+    constexpr static integer<Bits, Signed> multiply(const integer<Bits, Signed> & lhs, const T & rhs)
     {
         if constexpr (Bits == 256 && sizeof(base_type) == 8)
         {
@@ -669,14 +662,9 @@ public:
             integer<Bits, Signed> res;
 
             if constexpr (std::is_signed_v<Signed>)
-            {
-                res = multiply((is_negative(lhs) ? make_positive(lhs) : lhs),
-                                  (is_negative(rhs) ? make_positive(rhs) : rhs));
-            }
+                res = multiply((is_negative(lhs) ? make_positive(lhs) : lhs), (is_negative(rhs) ? make_positive(rhs) : rhs));
             else
-            {
                 res = multiply(lhs, (is_negative(rhs) ? make_positive(rhs) : rhs));
-            }
 
             if (std::is_same_v<Signed, signed> && is_negative(lhs) != is_negative(rhs))
                 res = operator_unary_minus(res);
@@ -938,7 +926,6 @@ public:
             ++c;
             ++c;
             while (*c)
-            {
                 if (*c >= '0' && *c <= '9')
                 {
                     res = multiply(res, 16U);
@@ -959,7 +946,6 @@ public:
                 }
                 else
                     throw std::runtime_error("Invalid char from");
-            }
         }
         else
         { // dec
@@ -985,12 +971,11 @@ public:
 
 template <size_t Bits, typename Signed>
 template <typename T>
-constexpr integer<Bits, Signed>::integer(T rhs) noexcept
-    : items{}
+constexpr integer<Bits, Signed>::integer(T rhs) noexcept : items{}
 {
     if constexpr (IsWideInteger<T>::value)
         _impl::wide_integer_from_wide_integer(*this, rhs);
-    else if  constexpr (IsTupleLike<T>::value)
+    else if constexpr (IsTupleLike<T>::value)
         _impl::wide_integer_from_tuple_like(*this, rhs);
     else
         _impl::wide_integer_from_builtin(*this, rhs);
@@ -998,14 +983,13 @@ constexpr integer<Bits, Signed>::integer(T rhs) noexcept
 
 template <size_t Bits, typename Signed>
 template <typename T>
-constexpr integer<Bits, Signed>::integer(std::initializer_list<T> il) noexcept
-    : items{}
+constexpr integer<Bits, Signed>::integer(std::initializer_list<T> il) noexcept : items{}
 {
     if (il.size() == 1)
     {
         if constexpr (IsWideInteger<T>::value)
             _impl::wide_integer_from_wide_integer(*this, *il.begin());
-        else if  constexpr (IsTupleLike<T>::value)
+        else if constexpr (IsTupleLike<T>::value)
             _impl::wide_integer_from_tuple_like(*this, *il.begin());
         else
             _impl::wide_integer_from_builtin(*this, *il.begin());
@@ -1035,7 +1019,7 @@ template <size_t Bits, typename Signed>
 template <typename T>
 constexpr integer<Bits, Signed> & integer<Bits, Signed>::operator=(T rhs) noexcept
 {
-    if  constexpr (IsTupleLike<T>::value)
+    if constexpr (IsTupleLike<T>::value)
         _impl::wide_integer_from_tuple_like(*this, rhs);
     else
         _impl::wide_integer_from_builtin(*this, rhs);
@@ -1120,12 +1104,10 @@ template <size_t Bits, typename Signed>
 constexpr integer<Bits, Signed> & integer<Bits, Signed>::operator>>=(int n) noexcept
 {
     if (static_cast<size_t>(n) >= Bits)
-    {
         if (_impl::is_negative(*this))
             *this = -1;
         else
             *this = 0;
-    }
     else if (n > 0)
         *this = _impl::shift_right(*this, n);
     return *this;
@@ -1241,7 +1223,10 @@ constexpr integer<Bits, Signed> operator+(const integer<Bits, Signed> & lhs) noe
 }
 
 #define CT(x) \
-    std::common_type_t<std::decay_t<decltype(rhs)>, std::decay_t<decltype(lhs)>> { x }
+    std::common_type_t<std::decay_t<decltype(rhs)>, std::decay_t<decltype(lhs)>> \
+    { \
+        x \
+    }
 
 // Binary operators
 template <size_t Bits, typename Signed, size_t Bits2, typename Signed2>

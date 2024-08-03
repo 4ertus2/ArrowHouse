@@ -3,9 +3,6 @@
 #include <string.h>
 #include <type_traits>
 
-namespace AH
-{
-
 template <typename T>
 inline T unalignedLoad(const void * address)
 {
@@ -24,6 +21,4 @@ inline void unalignedStore(void * address,
 {
     static_assert(std::is_trivially_copyable_v<T>);
     memcpy(address, &src, sizeof(src));
-}
-
 }

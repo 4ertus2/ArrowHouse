@@ -76,7 +76,7 @@ inline bool insertNumber(MutableColumn & column, T value)
     else if constexpr (std::is_same_v<T, double>)
         return assert_cast<MutableColumnFloat64 &>(column).Append(value).ok();
 
-    throw Exception("unexpected type");
+    throw std::runtime_error("unexpected type");
 }
 
 template <typename T>
@@ -103,7 +103,7 @@ inline bool insertSameSizeNumber(MutableColumn & column, T value)
     else if constexpr (std::is_same_v<T, double>)
         return assert_same_size_cast<MutableColumnFloat64 &>(column).Append(value).ok();
 
-    throw Exception("unexpected type");
+    throw std::runtime_error("unexpected type");
 }
 
 inline bool insertTimestamp(MutableColumn & column, Int64 value)

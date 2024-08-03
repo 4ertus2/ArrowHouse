@@ -2,7 +2,7 @@
 #include <AggregateFunctions/IAggregateFunction.h>
 #include <DataStreams/AggregatingBlockInputStream.h>
 #include <DataStreams/OneBlockInputStream.h>
-#include "Aggregator.h"
+#include <Interpreters/Aggregator.h>
 #include "arrow_clickhouse_types.h"
 
 #include <unordered_set>
