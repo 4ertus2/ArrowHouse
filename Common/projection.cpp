@@ -1,4 +1,5 @@
 #include <Common/projection.h>
+#include <Common/Exception.h>
 
 namespace AH
 {
@@ -29,7 +30,7 @@ Header projectionImpl(const Header & src_schema, const std::vector<T> & column_n
         if (pos < 0)
         {
             if (throw_if_column_not_found)
-                throw std::runtime_error("no column in block " + src_schema->ToString());
+                throw Exception("no column in block " + src_schema->ToString());
             continue;
         }
         fields.push_back(src_schema->field(pos));
@@ -63,7 +64,7 @@ static Block projectionImpl(const Block & src_batch, const std::vector<T> & colu
         if (pos < 0)
         {
             if (throw_if_column_not_found)
-                throw std::runtime_error("no column in block " + src_schema->ToString());
+                throw Exception("no column in block " + src_schema->ToString());
             continue; // TODO: check no column expected
         }
         fields.push_back(src_schema->field(pos));

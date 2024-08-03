@@ -5,7 +5,7 @@
 #pragma once
 #include "arrow_clickhouse_types.h"
 
-#include "AggregationCommon.h"
+#include <Interpreters/AggregationCommon.h>
 #include <Common/HashTable/HashTableKeyHolder.h>
 
 namespace AH

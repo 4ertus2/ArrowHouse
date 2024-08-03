@@ -9,7 +9,7 @@
 #include "AggregateFunctions/AggregateFunctionCount.h"
 #include "AggregateFunctions/AggregateFunctionMinMaxAny.h"
 #include "AggregateFunctions/AggregateFunctionSum.h"
-#include "Aggregator.h"
+#include "Interpreters/Aggregator.h"
 #include "DataStreams/AggregatingBlockInputStream.h"
 #include "DataStreams/MergingAggregatedBlockInputStream.h"
 #include "DataStreams/OneBlockInputStream.h"

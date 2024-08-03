@@ -16,6 +16,7 @@
 #include <Columns/ColumnsHashing.h>
 #include <Columns/ColumnAggregateFunction.h>
 #include <DataStreams/IBlockStream_fwd.h>
+#include <Interpreters/AggregateDescription.h>
 
 namespace AH
 {

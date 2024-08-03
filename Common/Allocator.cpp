@@ -8,11 +8,6 @@
 namespace AH
 {
 
-int64_t getPageSize()
-{
-    return sysconf(_SC_PAGESIZE);
-}
-
 /** Keep definition of this constant in cpp file; otherwise its value
   * is inlined into allocator code making it impossible to override it
   * in third-party code.
