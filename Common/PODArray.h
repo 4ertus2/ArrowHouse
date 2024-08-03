@@ -5,20 +5,21 @@
 #pragma once
 #include "arrow_clickhouse_types.h"
 
-#include <string.h>
-#include <cstddef>
-#include <cassert>
 #include <algorithm>
+#include <cassert>
+#include <cstddef>
 #include <memory>
+#include <string.h>
 
 //#include <boost/noncopyable.hpp>
 //#include <common/strong_typedef.h>
 
 #include <Common/Allocator.h>
+#include <Common/Exception.h>
 #include <Common/memcpySmall.h>
 
 #ifndef NDEBUG
-    #include <sys/mman.h>
+#    include <sys/mman.h>
 #endif
 
 #include <Common/PODArray_fwd.h>
@@ -33,8 +34,8 @@ namespace AH
   * Don't forget to apply std::decay when using this constexpr.
   */
 template <typename T, typename U>
-constexpr bool memcpy_can_be_used_for_assignment = std::is_same_v<T, U>
-    || (std::is_integral_v<T> && std::is_integral_v<U> && sizeof(T) == sizeof(U));
+constexpr bool memcpy_can_be_used_for_assignment
+    = std::is_same_v<T, U> || (std::is_integral_v<T> && std::is_integral_v<U> && sizeof(T) == sizeof(U));
 
 
 /** A dynamic array for POD types.
@@ -98,7 +99,7 @@ inline size_t roundUpToPowerOfTwoOrZero(size_t n)
 }
 
 template <size_t ELEMENT_SIZE, size_t initial_bytes, typename TAllocator, size_t pad_right_, size_t pad_left_>
-class PODArrayBase : /*private boost::noncopyable,*/ private TAllocator    /// empty base optimization
+class PODArrayBase : /*private boost::noncopyable,*/ private TAllocator /// empty base optimization
 {
 protected:
     /// Round padding up to an whole number of elements to simplify arithmetic.
@@ -112,12 +113,11 @@ protected:
 
     // If we are using allocator with inline memory, the minimal size of
     // array must be in sync with the size of this memory.
-    static_assert(allocatorInitialBytes<TAllocator> == 0
-                  || allocatorInitialBytes<TAllocator> == initial_bytes);
+    static_assert(allocatorInitialBytes<TAllocator> == 0 || allocatorInitialBytes<TAllocator> == initial_bytes);
 
-    char * c_start          = null;    /// Does not include pad_left.
-    char * c_end            = null;
-    char * c_end_of_storage = null;    /// Does not include pad_right.
+    char * c_start = null; /// Does not include pad_left.
+    char * c_end = null;
+    char * c_end_of_storage = null; /// Does not include pad_right.
 
     /// The amount of memory occupied by the num_elements of the elements.
     static size_t byte_size(size_t num_elements)
@@ -131,12 +131,9 @@ protected:
     /// Minimum amount of memory to allocate for num_elements, including padding.
     static size_t minimum_memory_for_elements(size_t num_elements) { return byte_size(num_elements) + pad_right + pad_left; }
 
-    void alloc_for_num_elements(size_t num_elements)
-    {
-        alloc(minimum_memory_for_elements(num_elements));
-    }
+    void alloc_for_num_elements(size_t num_elements) { alloc(minimum_memory_for_elements(num_elements)); }
 
-    template <typename ... TAllocatorParams>
+    template <typename... TAllocatorParams>
     void alloc(size_t bytes, TAllocatorParams &&... allocator_params)
     {
         char * allocated = reinterpret_cast<char *>(TAllocator::alloc(bytes, std::forward<TAllocatorParams>(allocator_params)...));
@@ -159,7 +156,7 @@ protected:
         TAllocator::free(c_start - pad_left, allocated_bytes());
     }
 
-    template <typename ... TAllocatorParams>
+    template <typename... TAllocatorParams>
     void realloc(size_t bytes, TAllocatorParams &&... allocator_params)
     {
         if (c_start == null)
@@ -180,10 +177,7 @@ protected:
         c_end_of_storage = allocated + bytes - pad_right;
     }
 
-    bool isInitialized() const
-    {
-        return (c_start != null) && (c_end != null) && (c_end_of_storage != null);
-    }
+    bool isInitialized() const { return (c_start != null) && (c_end != null) && (c_end_of_storage != null); }
 
     bool isAllocatedFromStack() const
     {
@@ -191,16 +185,16 @@ protected:
         return (stack_threshold > 0) && (allocated_bytes() <= stack_threshold);
     }
 
-    template <typename ... TAllocatorParams>
+    template <typename... TAllocatorParams>
     void reserveForNextSize(TAllocatorParams &&... allocator_params)
     {
         if (empty())
         {
             // The allocated memory should be multiplication of ELEMENT_SIZE to hold the element, otherwise,
             // memory issue such as corruption could appear in edge case.
-            realloc(std::max(integerRoundUp(initial_bytes, ELEMENT_SIZE),
-                             minimum_memory_for_elements(1)),
-                    std::forward<TAllocatorParams>(allocator_params)...);
+            realloc(
+                std::max(integerRoundUp(initial_bytes, ELEMENT_SIZE), minimum_memory_for_elements(1)),
+                std::forward<TAllocatorParams>(allocator_params)...);
         }
         else
             realloc(allocated_bytes() * 2, std::forward<TAllocatorParams>(allocator_params)...);
@@ -213,8 +207,10 @@ protected:
     {
         static constexpr size_t PROTECT_PAGE_SIZE = 4096;
 
-        char * left_rounded_up = reinterpret_cast<char *>((reinterpret_cast<intptr_t>(c_start) - pad_left + PROTECT_PAGE_SIZE - 1) / PROTECT_PAGE_SIZE * PROTECT_PAGE_SIZE);
-        char * right_rounded_down = reinterpret_cast<char *>((reinterpret_cast<intptr_t>(c_end_of_storage) + pad_right) / PROTECT_PAGE_SIZE * PROTECT_PAGE_SIZE);
+        char * left_rounded_up = reinterpret_cast<char *>(
+            (reinterpret_cast<intptr_t>(c_start) - pad_left + PROTECT_PAGE_SIZE - 1) / PROTECT_PAGE_SIZE * PROTECT_PAGE_SIZE);
+        char * right_rounded_down
+            = reinterpret_cast<char *>((reinterpret_cast<intptr_t>(c_end_of_storage) + pad_right) / PROTECT_PAGE_SIZE * PROTECT_PAGE_SIZE);
 
         if (right_rounded_down > left_rounded_up)
         {
@@ -238,48 +234,43 @@ public:
 
     void clear() { c_end = c_start; }
 
-    template <typename ... TAllocatorParams>
+    template <typename... TAllocatorParams>
 #if defined(__clang__)
     ALWAYS_INLINE /// Better performance in clang build, worse performance in gcc build.
 #endif
-    void reserve(size_t n, TAllocatorParams &&... allocator_params)
+        void
+        reserve(size_t n, TAllocatorParams &&... allocator_params)
     {
         if (n > capacity())
             realloc(roundUpToPowerOfTwoOrZero(minimum_memory_for_elements(n)), std::forward<TAllocatorParams>(allocator_params)...);
     }
 
-    template <typename ... TAllocatorParams>
+    template <typename... TAllocatorParams>
     void reserve_exact(size_t n, TAllocatorParams &&... allocator_params)
     {
         if (n > capacity())
             realloc(minimum_memory_for_elements(n), std::forward<TAllocatorParams>(allocator_params)...);
     }
 
-    template <typename ... TAllocatorParams>
+    template <typename... TAllocatorParams>
     void resize(size_t n, TAllocatorParams &&... allocator_params)
     {
         reserve(n, std::forward<TAllocatorParams>(allocator_params)...);
         resize_assume_reserved(n);
     }
 
-    template <typename ... TAllocatorParams>
+    template <typename... TAllocatorParams>
     void resize_exact(size_t n, TAllocatorParams &&... allocator_params)
     {
         reserve_exact(n, std::forward<TAllocatorParams>(allocator_params)...);
         resize_assume_reserved(n);
     }
 
-    void resize_assume_reserved(const size_t n)
-    {
-        c_end = c_start + byte_size(n);
-    }
+    void resize_assume_reserved(const size_t n) { c_end = c_start + byte_size(n); }
 
-    const char * raw_data() const
-    {
-        return c_start;
-    }
+    const char * raw_data() const { return c_start; }
 
-    template <typename ... TAllocatorParams>
+    template <typename... TAllocatorParams>
     void push_back_raw(const void * ptr, TAllocatorParams &&... allocator_params)
     {
         size_t required_capacity = size() + ELEMENT_SIZE;
@@ -319,10 +310,7 @@ public:
 #endif
     }
 
-    ~PODArrayBase()
-    {
-        dealloc();
-    }
+    ~PODArrayBase() { dealloc(); }
 };
 
 template <typename T, size_t initial_bytes, typename TAllocator, size_t pad_right_, size_t pad_left_>
@@ -331,11 +319,11 @@ class PODArray : public PODArrayBase<sizeof(T), initial_bytes, TAllocator, pad_r
 protected:
     using Base = PODArrayBase<sizeof(T), initial_bytes, TAllocator, pad_right_, pad_left_>;
 
-    T * t_start()                      { return reinterpret_cast<T *>(this->c_start); }
-    T * t_end()                        { return reinterpret_cast<T *>(this->c_end); }
+    T * t_start() { return reinterpret_cast<T *>(this->c_start); }
+    T * t_end() { return reinterpret_cast<T *>(this->c_end); }
 
-    const T * t_start() const          { return reinterpret_cast<const T *>(this->c_start); }
-    const T * t_end() const            { return reinterpret_cast<const T *>(this->c_end); }
+    const T * t_start() const { return reinterpret_cast<const T *>(this->c_start); }
+    const T * t_end() const { return reinterpret_cast<const T *>(this->c_end); }
 
 public:
     using value_type = T;
@@ -372,15 +360,10 @@ public:
         this->reserve(std::size(il));
 
         for (const auto & x : il)
-        {
             this->push_back(x);
-        }
     }
 
-    PODArray(PODArray && other)
-    {
-        this->swap(other);
-    }
+    PODArray(PODArray && other) { this->swap(other); }
 
     PODArray & operator=(PODArray && other)
     {
@@ -392,30 +375,30 @@ public:
     const T * data() const { return t_start(); }
 
     /// The index is signed to access -1th element without pointer overflow.
-    T & operator[] (ssize_t n)
+    T & operator[](ssize_t n)
     {
         /// <= size, because taking address of one element past memory range is Ok in C++ (expression like &arr[arr.size()] is perfectly valid).
         assert((n >= (static_cast<ssize_t>(pad_left_) ? -1 : 0)) && (n <= static_cast<ssize_t>(this->size())));
         return t_start()[n];
     }
 
-    const T & operator[] (ssize_t n) const
+    const T & operator[](ssize_t n) const
     {
         assert((n >= (static_cast<ssize_t>(pad_left_) ? -1 : 0)) && (n <= static_cast<ssize_t>(this->size())));
         return t_start()[n];
     }
 
-    T & front()             { return t_start()[0]; }
-    T & back()              { return t_end()[-1]; }
+    T & front() { return t_start()[0]; }
+    T & back() { return t_end()[-1]; }
     const T & front() const { return t_start()[0]; }
-    const T & back() const  { return t_end()[-1]; }
+    const T & back() const { return t_end()[-1]; }
 
-    iterator begin()              { return t_start(); }
-    iterator end()                { return t_end(); }
-    const_iterator begin() const  { return t_start(); }
-    const_iterator end() const    { return t_end(); }
+    iterator begin() { return t_start(); }
+    iterator end() { return t_end(); }
+    const_iterator begin() const { return t_start(); }
+    const_iterator end() const { return t_end(); }
     const_iterator cbegin() const { return t_start(); }
-    const_iterator cend() const   { return t_end(); }
+    const_iterator cend() const { return t_end(); }
 
     /// Same as resize, but zeroes new elements.
     void resize_fill(size_t n)
@@ -440,7 +423,7 @@ public:
         this->c_end = this->c_start + this->byte_size(n);
     }
 
-    template <typename U, typename ... TAllocatorParams>
+    template <typename U, typename... TAllocatorParams>
     void push_back(U && x, TAllocatorParams &&... allocator_params)
     {
         if (unlikely(this->c_end + sizeof(T) > this->c_end_of_storage))
@@ -463,13 +446,10 @@ public:
         this->c_end += this->byte_size(1);
     }
 
-    void pop_back()
-    {
-        this->c_end -= this->byte_size(1);
-    }
+    void pop_back() { this->c_end -= this->byte_size(1); }
 
     /// Do not insert into the array a piece of itself. Because with the resize, the iterators on themselves can be invalidated.
-    template <typename It1, typename It2, typename ... TAllocatorParams>
+    template <typename It1, typename It2, typename... TAllocatorParams>
     void insertPrepare(It1 from_begin, It2 from_end, TAllocatorParams &&... allocator_params)
     {
         this->assertNotIntersects(from_begin, from_end);
@@ -479,7 +459,7 @@ public:
     }
 
     /// Do not insert into the array a piece of itself. Because with the resize, the iterators on themselves can be invalidated.
-    template <typename It1, typename It2, typename ... TAllocatorParams>
+    template <typename It1, typename It2, typename... TAllocatorParams>
     void insert(It1 from_begin, It2 from_end, TAllocatorParams &&... allocator_params)
     {
         insertPrepare(from_begin, from_end, std::forward<TAllocatorParams>(allocator_params)...);
@@ -488,7 +468,7 @@ public:
 
     /// In contrast to 'insert' this method is Ok even for inserting from itself.
     /// Because we obtain iterators after reserving memory.
-    template <typename Container, typename ... TAllocatorParams>
+    template <typename Container, typename... TAllocatorParams>
     void insertByOffsets(Container && rhs, size_t from_begin, size_t from_end, TAllocatorParams &&... allocator_params)
     {
         static_assert(memcpy_can_be_used_for_assignment<std::decay_t<T>, std::decay_t<decltype(rhs.front())>>);
@@ -509,7 +489,7 @@ public:
     }
 
     /// Works under assumption, that it's possible to read up to 15 excessive bytes after `from_end` and this PODArray is padded.
-    template <typename It1, typename It2, typename ... TAllocatorParams>
+    template <typename It1, typename It2, typename... TAllocatorParams>
     void insertSmallAllowReadWriteOverflow15(It1 from_begin, It2 from_end, TAllocatorParams &&... allocator_params)
     {
         static_assert(pad_right_ >= 15);
@@ -542,8 +522,8 @@ public:
         this->c_end += bytes_to_copy;
     }
 
-    template <typename ... TAllocatorParams>
-    void insertFromItself(iterator from_begin, iterator from_end, TAllocatorParams && ... allocator_params)
+    template <typename... TAllocatorParams>
+    void insertFromItself(iterator from_begin, iterator from_end, TAllocatorParams &&... allocator_params)
     {
         static_assert(memcpy_can_be_used_for_assignment<std::decay_t<T>, std::decay_t<decltype(*from_begin)>>);
 
@@ -660,15 +640,11 @@ public:
                 std::swap(this->operator[](i), rhs[i]);
 
             if (this->size() == max_size)
-            {
                 for (size_t i = min_size; i < max_size; ++i)
                     rhs[i] = this->operator[](i);
-            }
             else
-            {
                 for (size_t i = min_size; i < max_size; ++i)
                     this->operator[](i) = rhs[i];
-            }
 
             size_t lhs_size = this->size();
             size_t lhs_allocated = this->allocated_bytes();
@@ -724,10 +700,7 @@ public:
     }
 
     // ISO C++ has strict ambiguity rules, thus we cannot apply TAllocatorParams here.
-    void assign(const PODArray & from)
-    {
-        assign(from.begin(), from.end());
-    }
+    void assign(const PODArray & from) { assign(from.begin(), from.end()); }
 
     void erase(const_iterator first, const_iterator last)
     {
@@ -749,12 +722,9 @@ public:
         this->c_end = reinterpret_cast<char *>(first_no_const);
     }
 
-    void erase(const_iterator pos)
-    {
-        this->erase(pos, pos + 1);
-    }
+    void erase(const_iterator pos) { this->erase(pos, pos + 1); }
 
-    bool operator== (const PODArray & rhs) const
+    bool operator==(const PODArray & rhs) const
     {
         if (this->size() != rhs.size())
             return false;
@@ -774,14 +744,13 @@ public:
         return true;
     }
 
-    bool operator!= (const PODArray & rhs) const
-    {
-        return !operator==(rhs);
-    }
+    bool operator!=(const PODArray & rhs) const { return !operator==(rhs); }
 };
 
 template <typename T, size_t initial_bytes, typename TAllocator, size_t pad_right_, size_t pad_left_>
-void swap(PODArray<T, initial_bytes, TAllocator, pad_right_, pad_left_> & lhs, PODArray<T, initial_bytes, TAllocator, pad_right_, pad_left_> & rhs)
+void swap(
+    PODArray<T, initial_bytes, TAllocator, pad_right_, pad_left_> & lhs,
+    PODArray<T, initial_bytes, TAllocator, pad_right_, pad_left_> & rhs)
 {
     lhs.swap(rhs);
 }

@@ -1,5 +1,5 @@
 add_library(
-    Columns STATIC
+    arrowhouse_columns STATIC
     ColumnsCommon.cpp
     ColumnAggregateFunction.cpp
 )

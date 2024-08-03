@@ -1,5 +1,5 @@
 add_library(
-    DataStreams STATIC
+    arrowhouse_datastreams STATIC
     AggregatingBlockInputStream.cpp
     FilterColumnsBlockInputStream.cpp
     IBlockInputStream.cpp
@@ -11,7 +11,7 @@ add_library(
 
 add_executable(ut_streams_smoke tests/gtest_streams_smoke.cpp)
 target_link_libraries(ut_streams_smoke
-    DataStreams YdbModes Common
+    arrowhouse
     Arrow::arrow_static
     ch_contrib::gtest
 )
