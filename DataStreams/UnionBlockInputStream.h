@@ -39,17 +39,14 @@ public:
 
     UnionBlockInputStream(
         BlockInputStreams inputs,
-        BlockInputStreamPtr additional_input_at_end,
-        size_t max_threads,
+        unsigned max_threads,
         ExceptionCallback exception_callback_ = ExceptionCallback()
     ) :
-        output_queue(std::min(inputs.size(), max_threads)), handler(*this),
-        processor(inputs, additional_input_at_end, max_threads, handler),
+        output_queue(std::min(inputs.size(), (size_t)max_threads)), handler(*this),
+        processor(inputs, max_threads, handler),
         exception_callback(exception_callback_)
     {
         children = inputs;
-        if (additional_input_at_end)
-            children.push_back(additional_input_at_end);
 #if 0
         size_t num_children = children.size();
         if (num_children > 1)
@@ -210,7 +207,7 @@ private:
     {
         Handler(UnionBlockInputStream & parent_) : parent(parent_) {}
 
-        void onBlock(Block & block, size_t /*thread_num*/)
+        void onBlock(Block && block, size_t /*thread_num*/)
         {
             std::ignore = parent.output_queue.push(Payload(block));
         }

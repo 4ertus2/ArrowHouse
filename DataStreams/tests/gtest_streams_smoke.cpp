@@ -149,8 +149,7 @@ TEST(UnionBlockInputStream, StreamSmoke)
     for (size_t i = 0; i < 128; ++i)
         streams.push_back(std::make_shared<OneBlockInputStream>(src_batch));
 
-    BlockInputStreamPtr additional = {};
-    auto union_stream = std::make_shared<UnionBlockInputStream>(streams, additional, 16);
+    auto union_stream = std::make_shared<UnionBlockInputStream>(streams, 16);
     EXPECT_EQ(union_stream->getName(), "Union");
 
     while (auto batch = union_stream->read())
