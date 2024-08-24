@@ -40,10 +40,11 @@ public:
     UnionBlockInputStream(
         BlockInputStreams inputs,
         unsigned max_threads,
+        unsigned max_io_threads = 0,
         ExceptionCallback exception_callback_ = ExceptionCallback()
     ) :
         output_queue(std::min(inputs.size(), (size_t)max_threads)), handler(*this),
-        processor(inputs, max_threads, handler),
+        processor(inputs, max_threads, max_io_threads, handler),
         exception_callback(exception_callback_)
     {
         children = inputs;

@@ -4,6 +4,7 @@
 #include <exception>
 #include <mutex>
 #include <queue>
+#include <semaphore>
 #include <thread>
 
 #include <DataStreams/GuardedBlockOutputStream.h>
@@ -24,9 +25,33 @@
 namespace AH
 {
 
-class ParallelInputsStream : public IBlockInputStream
+
+struct NoSamephore
+{
+    NoSamephore(std::ptrdiff_t /*desired*/) { }
+    void acquire() { }
+    void release(std::ptrdiff_t update = 1) { }
+};
+
+
+template <typename TSemaphore>
+class SemaphoreGuard
 {
 public:
+    SemaphoreGuard(TSemaphore & sema_) : sema(sema_) { sema.acquire(); }
+    ~SemaphoreGuard() { sema.release(); }
+
+private:
+    TSemaphore & sema;
+};
+
+
+template <typename TSemapore = NoSamephore>
+class TParallelInputsStream : public IBlockInputStream
+{
+public:
+    static constexpr ptrdiff_t MAX_SEMA_1K = 1000;
+
     enum Flags
     {
         NONE = 0,
@@ -61,7 +86,7 @@ public:
         }
     };
 
-    ParallelInputsStream(const BlockInputStreams & inputs_, uint32_t flags = NONE)
+    TParallelInputsStream(const BlockInputStreams & inputs_, uint32_t max_io_threads, uint32_t flags) : io_samephore(max_io_threads)
     {
         if (inputs_.empty())
             throw std::runtime_error("unexpected empty inputs for ParallelInputsStream");
@@ -77,6 +102,8 @@ public:
 
     Block readImpl() override
     {
+        SemaphoreGuard<TSemapore> guard(io_samephore);
+
         Input input = popInput();
         if (!input.stream)
             return {};
@@ -95,6 +122,7 @@ public:
 private:
     std::queue<Input> available_inputs;
     std::mutex available_inputs_mutex;
+    TSemapore io_samephore;
 
     Input popInput()
     {
@@ -115,6 +143,10 @@ private:
         available_inputs.emplace(std::move(input));
     }
 };
+
+using ParallelInputsStream = TParallelInputsStream<>;
+using IOLimitedInputsStream = TParallelInputsStream<std::counting_semaphore<ParallelInputsStream::MAX_SEMA_1K>>;
+
 
 /// Example of the handler.
 struct ParallelInputsHandler
@@ -140,13 +172,22 @@ template <typename Handler>
 class ParallelInputsProcessor
 {
 public:
-    ParallelInputsProcessor(const BlockInputStreams & inputs_, unsigned max_threads_, Handler & handler_, uint32_t flags = 0)
-        : input(std::make_shared<ParallelInputsStream>(inputs_, flags)), max_threads(max_threads_), handler(handler_)
+    static BlockInputStreamPtr
+    MakeInputsStream(const BlockInputStreams & inputs_, unsigned max_compute_threads, unsigned max_io_threads, uint32_t flags = 0)
+    {
+        if (max_io_threads && (max_compute_threads > max_io_threads))
+            return std::make_shared<IOLimitedInputsStream>(inputs_, max_io_threads, flags);
+        return std::make_shared<ParallelInputsStream>(inputs_, max_io_threads, flags);
+    }
+
+    ParallelInputsProcessor(
+        const BlockInputStreams & inputs_, unsigned max_compute_threads, unsigned max_io_threads, Handler & handler_, uint32_t flags = 0)
+        : input(MakeInputsStream(inputs_, max_compute_threads, max_io_threads, flags)), max_threads(max_compute_threads), handler(handler_)
     {
     }
 
-    ParallelInputsProcessor(const BlockInputStreamPtr & mt_stream_, unsigned max_threads_, Handler & handler_)
-        : input(mt_stream_), max_threads(max_threads_), handler(handler_)
+    ParallelInputsProcessor(const BlockInputStreamPtr & mt_stream_, unsigned max_compute_threads, Handler & handler_)
+        : input(mt_stream_), max_threads(max_compute_threads), handler(handler_)
     {
     }
 
@@ -289,14 +330,18 @@ public:
         ProgressCallback progress;
     };
 
-    static void
-    copyData(const BlockInputStreams & inputs, BlockOutputStreamPtr output, uint32_t max_threads, ProgressCallback progress = {})
+    static void copyData(
+        const BlockInputStreams & inputs,
+        BlockOutputStreamPtr output,
+        uint32_t max_compute_threads = 1,
+        uint32_t max_io_threads = 0,
+        ProgressCallback progress = {})
     {
         BlockOutputStreamPtr mt_output = std::make_shared<GuardedBlockOutputStream>(output);
         mt_output->writePrefix();
 
         constexpr uint32_t flags = ParallelInputsStream::PREFIX | ParallelInputsStream::SUFFIX;
-        ParallelInputsSink sink(inputs, mt_output, max_threads, flags, progress);
+        ParallelInputsSink sink(inputs, mt_output, max_compute_threads, max_io_threads, flags, progress);
         sink.process();
         sink.finalize();
 
@@ -306,10 +351,11 @@ public:
     ParallelInputsSink(
         const BlockInputStreams & inputs,
         BlockOutputStreamPtr mt_output,
-        uint32_t max_threads,
+        uint32_t max_compute_threads,
+        uint32_t max_io_threads = 0,
         uint32_t flags = 0,
         ProgressCallback progress = {})
-        : handler(*this, progress), output(mt_output), processor(inputs, max_threads, handler, flags)
+        : handler(*this, progress), output(mt_output), processor(inputs, max_compute_threads, max_io_threads, handler, flags)
     {
     }
 
