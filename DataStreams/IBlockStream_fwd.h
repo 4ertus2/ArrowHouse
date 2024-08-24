@@ -1,7 +1,3 @@
-// The code in this file is based on original ClickHouse source code
-// which is licensed under Apache license v2.0
-// See: https://github.com/ClickHouse/ClickHouse/
-
 #pragma once
 
 #include <memory>

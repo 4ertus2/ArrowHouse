@@ -6,6 +6,7 @@
 #include <queue>
 #include <thread>
 
+#include <DataStreams/GuardedBlockOutputStream.h>
 #include <DataStreams/IBlockInputStream.h>
 
 
@@ -23,7 +24,7 @@
 namespace AH
 {
 
-class ParallelInputStream : public IBlockInputStream
+class ParallelInputsStream : public IBlockInputStream
 {
 public:
     enum Flags
@@ -60,24 +61,24 @@ public:
         }
     };
 
-    ParallelInputStream(const BlockInputStreams & inputs_, uint32_t flags = NONE)
+    ParallelInputsStream(const BlockInputStreams & inputs_, uint32_t flags = NONE)
     {
         if (inputs_.empty())
-            throw std::runtime_error("unexpected empty inputs for ParallelInputStream");
+            throw std::runtime_error("unexpected empty inputs for ParallelInputsStream");
 
         children = inputs_;
 
         for (size_t i = 0; i < inputs_.size(); ++i)
-            available_inputs.emplace(inputs_[i], i);
+            available_inputs.emplace(inputs_[i], flags, i);
     }
 
-    String getName() const override { return "ParallelInputStream"; }
+    String getName() const override { return "ParallelInputsStream"; }
     Header getHeader() const override { return children[0]->getHeader(); }
 
     Block readImpl() override
     {
         Input input = popInput();
-        if (input.stream)
+        if (!input.stream)
             return {};
 
         if (Block block = input.read())
@@ -124,14 +125,14 @@ struct ParallelInputsHandler
     /// Called for each thread, when the thread has nothing else to do.
     /// Due to the fact that part of the sources has run out, and now there are fewer sources left than streams.
     /// Called if the `onException` method does not throw an exception; is called before the `onFinish` method.
-    void onFinishThread(size_t /*thread_num*/) { }
+    void onFinishThread(unsigned /*thread_num*/) { }
 
     /// Blocks are over. Due to the fact that all sources ran out or because of the cancellation of work.
     /// This method is always called exactly once, at the end of the work, if the `onException` method does not throw an exception.
     void onFinish() { }
 
     /// Exception handling. It is reasonable to call the ParallelInputsProcessor::cancel method in this method, and also pass the exception to the main thread.
-    void onException(std::exception_ptr & /*exception*/, size_t /*thread_num*/) { }
+    void onException(std::exception_ptr & /*exception*/, unsigned /*thread_num*/) { }
 };
 
 
@@ -139,8 +140,8 @@ template <typename Handler>
 class ParallelInputsProcessor
 {
 public:
-    ParallelInputsProcessor(const BlockInputStreams & inputs_, unsigned max_threads_, Handler & handler_)
-        : input(std::make_shared<ParallelInputStream>(inputs_)), max_threads(max_threads_), handler(handler_)
+    ParallelInputsProcessor(const BlockInputStreams & inputs_, unsigned max_threads_, Handler & handler_, uint32_t flags = 0)
+        : input(std::make_shared<ParallelInputsStream>(inputs_, flags)), max_threads(max_threads_), handler(handler_)
     {
     }
 
@@ -168,7 +169,7 @@ public:
 
         try
         {
-            for (size_t i = 0; i < max_threads; ++i)
+            for (unsigned i = 0; i < max_threads; ++i)
                 threads.emplace_back(&ParallelInputsProcessor::thread, this, i);
         }
         catch (...)
@@ -203,7 +204,7 @@ public:
     size_t getNumActiveThreads() const { return active_threads; }
 
 private:
-    void thread(size_t thread_num)
+    void thread(unsigned thread_num)
     {
         std::exception_ptr exception;
 
@@ -254,6 +255,79 @@ private:
     std::vector<std::thread> threads;
     std::atomic<size_t> active_threads{0};
     std::atomic<bool> joined_threads{false};
+};
+
+class ParallelInputsSink
+{
+public:
+    using ProgressCallback = std::function<void(const Block & clock, unsigned thread_num)>;
+
+    class Handler
+    {
+    public:
+        Handler(ParallelInputsSink & sink_, ProgressCallback progress_) : sink(sink_), progress(progress_) { }
+
+        void onBlock(Block && block, unsigned thread_num)
+        {
+            if (progress)
+                progress(block, thread_num);
+            sink.output->write(block);
+        }
+
+        void onFinishThread(size_t /*thread_num*/) { }
+        void onFinish() { sink.output->flush(); }
+
+        void onException(std::exception_ptr & ex, unsigned /*thread_num*/)
+        {
+            if (!sink.exception)
+                sink.exception = ex;
+            sink.cancel(false);
+        }
+
+    private:
+        ParallelInputsSink & sink;
+        ProgressCallback progress;
+    };
+
+    static void
+    copyData(const BlockInputStreams & inputs, BlockOutputStreamPtr output, uint32_t max_threads, ProgressCallback progress = {})
+    {
+        BlockOutputStreamPtr mt_output = std::make_shared<GuardedBlockOutputStream>(output);
+        mt_output->writePrefix();
+
+        constexpr uint32_t flags = ParallelInputsStream::PREFIX | ParallelInputsStream::SUFFIX;
+        ParallelInputsSink sink(inputs, mt_output, max_threads, flags, progress);
+        sink.process();
+        sink.finalize();
+
+        mt_output->writeSuffix();
+    }
+
+    ParallelInputsSink(
+        const BlockInputStreams & inputs,
+        BlockOutputStreamPtr mt_output,
+        uint32_t max_threads,
+        uint32_t flags = 0,
+        ProgressCallback progress = {})
+        : handler(*this, progress), output(mt_output), processor(inputs, max_threads, handler, flags)
+    {
+    }
+
+    void process() { processor.process(); }
+    void cancel(bool kill) { processor.cancel(kill); }
+
+    void finalize()
+    {
+        processor.wait();
+        if (exception)
+            std::rethrow_exception(exception);
+    }
+
+private:
+    Handler handler;
+    BlockOutputStreamPtr output;
+    ParallelInputsProcessor<Handler> processor;
+    std::exception_ptr exception;
 };
 
 }
