@@ -25,9 +25,9 @@ namespace AH
 {
 
 
-struct NoSamephore
+struct NoSemaphore
 {
-    NoSamephore(std::ptrdiff_t /*desired*/) { }
+    NoSemaphore(std::ptrdiff_t /*desired*/) { }
     void acquire() { }
     void release(std::ptrdiff_t update = 1) { }
 };
@@ -45,7 +45,7 @@ private:
 };
 
 
-template <typename TSemapore = NoSamephore>
+template <typename TSemapore = NoSemaphore>
 class TParallelInputsStream : public IBlockInputStream
 {
 public:
