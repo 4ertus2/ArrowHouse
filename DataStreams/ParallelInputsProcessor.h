@@ -85,7 +85,7 @@ public:
         }
     };
 
-    TParallelInputsStream(const BlockInputStreams & inputs_, uint32_t max_io_threads, uint32_t flags) : io_samephore(max_io_threads)
+    TParallelInputsStream(const BlockInputStreams & inputs_, uint32_t max_io_threads, uint32_t flags) : io_semaphore(max_io_threads)
     {
         if (inputs_.empty())
             throw std::runtime_error("unexpected empty inputs for ParallelInputsStream");
@@ -102,7 +102,7 @@ public:
     Block readImpl() override
     {
         {
-            SemaphoreGuard<TSemapore> guard(io_samephore);
+            SemaphoreGuard<TSemapore> guard(io_semaphore);
 
             Input input = popInput();
             if (!input.stream)
@@ -123,7 +123,7 @@ public:
 private:
     std::queue<Input> available_inputs;
     std::mutex available_inputs_mutex;
-    TSemapore io_samephore;
+    TSemapore io_semaphore;
 
     Input popInput()
     {
