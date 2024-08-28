@@ -6,6 +6,8 @@
 #include <queue>
 #include <semaphore>
 #include <thread>
+#include <unordered_map>
+#include <vector>
 
 #include <DataStreams/IBlockInputStream.h>
 
@@ -52,6 +54,7 @@ struct ParallelInput
         NONE = 0,
         PREFIX = 0x1,
         SUFFIX = 0x2,
+        AFFINITY = 0x4,
     };
 
     BlockInputStreamPtr stream;
@@ -116,6 +119,52 @@ private:
 };
 
 
+class AffinedInputs
+{
+public:
+    using Input = ParallelInput;
+
+    AffinedInputs(const BlockInputStreams & inputs_, uint32_t flags)
+    {
+        inputs.reserve(inputs_.size());
+        for (size_t i = 0; i < inputs_.size(); ++i)
+            inputs.push_back(ParallelInput(inputs_[i], flags, i));
+    }
+
+    Input popInput()
+    {
+        auto thread_id = std::this_thread::get_id();
+        std::lock_guard lock(mutex);
+
+        auto it = affinity.find(thread_id);
+        if (it != affinity.end())
+        {
+            return std::move(inputs[it->second]);
+        }
+        else if (affinity.size() < inputs.size())
+        {
+            size_t input_pos = affinity.size();
+            affinity.emplace(thread_id, input_pos);
+            return std::move(inputs[input_pos]);
+        }
+        return {};
+    }
+
+    void pushInput(Input && input)
+    {
+        auto thread_id = std::this_thread::get_id();
+        std::lock_guard lock(mutex);
+
+        inputs[affinity[thread_id]] = std::move(input);
+    }
+
+private:
+    std::vector<Input> inputs;
+    std::unordered_map<std::thread::id, size_t> affinity;
+    std::mutex mutex;
+};
+
+
 template <typename TSemapore = NoSemaphore, typename TQueue = AvailableInputsQueue>
 class TParallelInputsStream : public IBlockInputStream
 {
@@ -162,6 +211,7 @@ private:
 
 using ParallelInputsStream = TParallelInputsStream<>;
 using IOLimitedInputsStream = TParallelInputsStream<std::counting_semaphore<ParallelInputsStream::MAX_SEMA_1K>>;
+using AffinedInputsStream = TParallelInputsStream<NoSemaphore, AffinedInputs>;
 
 
 /// Example of the handler.
@@ -191,19 +241,18 @@ public:
     static BlockInputStreamPtr
     MakeInputsStream(const BlockInputStreams & inputs_, unsigned max_compute_threads, unsigned max_io_threads, uint32_t flags = 0)
     {
+        if (flags & ParallelInput::AFFINITY)
+            return std::make_shared<AffinedInputsStream>(inputs_, inputs_.size(), flags);
+
         if (max_io_threads && (max_compute_threads > max_io_threads))
             return std::make_shared<IOLimitedInputsStream>(inputs_, max_io_threads, flags);
+
         return std::make_shared<ParallelInputsStream>(inputs_, max_io_threads, flags);
     }
 
     ParallelInputsProcessor(
         const BlockInputStreams & inputs_, unsigned max_compute_threads, unsigned max_io_threads, Handler & handler_, uint32_t flags = 0)
         : input(MakeInputsStream(inputs_, max_compute_threads, max_io_threads, flags)), max_threads(max_compute_threads), handler(handler_)
-    {
-    }
-
-    ParallelInputsProcessor(const BlockInputStreamPtr & mt_stream_, unsigned max_compute_threads, Handler & handler_)
-        : input(mt_stream_), max_threads(max_compute_threads), handler(handler_)
     {
     }
 

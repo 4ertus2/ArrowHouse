@@ -23,7 +23,7 @@ public:
       * Header block contains column names, data types, columns of size 0. Constant columns must have corresponding values.
       * You must pass blocks of exactly this structure to the 'write' method.
       */
-    virtual Block getHeader() const = 0;
+    virtual Header getHeader() const = 0;
 
     /** Write block.
       */
