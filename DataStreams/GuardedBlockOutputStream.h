@@ -13,7 +13,7 @@ class GuardedBlockOutputStream : public IBlockOutputStream
 public:
     GuardedBlockOutputStream(BlockOutputStreamPtr stream_) : stream(stream_) { }
 
-    Block getHeader() const override
+    Header getHeader() const override
     {
         std::lock_guard lock(mutex);
         return stream->getHeader();

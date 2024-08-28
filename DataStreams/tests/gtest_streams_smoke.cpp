@@ -2,7 +2,9 @@
 #include <DataStreams/ConcatBlockInputStream.h>
 #include <DataStreams/FilterColumnsBlockInputStream.h>
 #include <DataStreams/NullBlockInputStream.h>
+#include <DataStreams/NullBlockOutputStream.h>
 #include <DataStreams/OneBlockInputStream.h>
+#include <DataStreams/ParallelInputsSink.h>
 #include <DataStreams/ReverseBlockInputStream.h>
 #include <DataStreams/UnionBlockInputStream.h>
 #include <YdbModes/CheckSortedBlockInputStream.h>
@@ -25,7 +27,7 @@ static std::shared_ptr<arrow::RecordBatch> TestBatch(int num_rows = 10, std::str
     return ret;
 }
 
-TEST(NullBlockInputStream, StreamSmoke)
+TEST(StreamSmoke, NullBlockInputStream)
 {
     std::shared_ptr<arrow::RecordBatch> batch = TestBatch();
     NullBlockInputStream stream(batch->schema());
@@ -33,7 +35,7 @@ TEST(NullBlockInputStream, StreamSmoke)
     EXPECT_EQ(stream.read().get(), nullptr);
 }
 
-TEST(OneBlockInputStream, StreamSmoke)
+TEST(StreamSmoke, OneBlockInputStream)
 {
     std::shared_ptr<arrow::RecordBatch> batch = TestBatch();
     OneBlockInputStream stream(batch);
@@ -41,7 +43,7 @@ TEST(OneBlockInputStream, StreamSmoke)
     batch = stream.read();
 }
 
-TEST(BlocksListBlockInputStream, StreamSmoke)
+TEST(StreamSmoke, BlocksListBlockInputStream)
 {
     std::shared_ptr<arrow::RecordBatch> src_batch = TestBatch();
 
@@ -52,7 +54,7 @@ TEST(BlocksListBlockInputStream, StreamSmoke)
         EXPECT_EQ(batch.get(), src_batch.get());
 }
 
-TEST(ConcatBlockInputStream, StreamSmoke)
+TEST(StreamSmoke, ConcatBlockInputStream)
 {
     std::shared_ptr<arrow::RecordBatch> src_batch = TestBatch();
     BlockInputStreams streams
@@ -70,7 +72,7 @@ TEST(ConcatBlockInputStream, StreamSmoke)
     }
 }
 
-TEST(FilterColumnsBlockInputStream, StreamSmoke)
+TEST(StreamSmoke, FilterColumnsBlockInputStream)
 {
     std::shared_ptr<arrow::RecordBatch> src_batch = TestBatch(10, "int64");
     BlockInputStreamPtr stream = std::make_shared<OneBlockInputStream>(src_batch);
@@ -90,7 +92,7 @@ TEST(FilterColumnsBlockInputStream, StreamSmoke)
     EXPECT_EQ(batch.get(), nullptr);
 }
 
-TEST(ReverseBlockInputStream, StreamSmoke)
+TEST(StreamSmoke, ReverseBlockInputStream)
 {
     std::shared_ptr<arrow::RecordBatch> batch = TestBatch();
     auto one = std::make_shared<OneBlockInputStream>(batch);
@@ -102,13 +104,14 @@ TEST(ReverseBlockInputStream, StreamSmoke)
     EXPECT_EQ(res_batch->num_columns(), batch->num_columns());
 }
 
-TEST(CheckSortedBlockInputStream, StreamSmoke)
+TEST(StreamSmoke, CheckSortedBlockInputStream)
 {
     std::shared_ptr<arrow::RecordBatch> batch = TestBatch();
     auto one = std::make_shared<OneBlockInputStream>(batch);
 
     AH::SortDescription sort_descr;
-    for (auto & field : batch->schema()->fields()) {
+    for (auto & field : batch->schema()->fields())
+    {
         SortColumnDescription col_descr{field->name(), 1};
         sort_descr.push_back(col_descr);
     }
@@ -121,7 +124,7 @@ TEST(CheckSortedBlockInputStream, StreamSmoke)
     check->read();
 }
 
-TEST(ExpressionBlockInputStream, StreamSmoke)
+TEST(StreamSmoke, ExpressionBlockInputStream)
 {
     std::shared_ptr<arrow::RecordBatch> batch = TestBatch(10, "x");
     auto one = std::make_shared<OneBlockInputStream>(batch);
@@ -141,7 +144,7 @@ TEST(ExpressionBlockInputStream, StreamSmoke)
     EXPECT_EQ(res->schema()->GetFieldIndex("res2"), 1);
 }
 
-TEST(UnionBlockInputStream, StreamSmoke)
+TEST(StreamSmoke, UnionBlockInputStream)
 {
     std::shared_ptr<arrow::RecordBatch> src_batch = TestBatch();
     BlockInputStreams streams;
@@ -154,6 +157,29 @@ TEST(UnionBlockInputStream, StreamSmoke)
 
     while (auto batch = union_stream->read())
         EXPECT_EQ(batch.get(), src_batch.get());
+}
+
+TEST(StreamSmoke, ParallelInputsSink)
+{
+    std::shared_ptr<arrow::RecordBatch> src_batch = TestBatch();
+    BlockInputStreams inputs
+        = {std::make_shared<OneBlockInputStream>(src_batch),
+           std::make_shared<OneBlockInputStream>(src_batch),
+           std::make_shared<OneBlockInputStream>(src_batch)};
+
+    auto header = src_batch->schema();
+    BlockOutputStreamPtr output = std::make_shared<NullBlockOutputStream>(header);
+
+    ParallelInputsSink::copyNToOne(inputs, output);
+    ParallelInputsSink::copyNToOne(inputs, output, 1, 1);
+    ParallelInputsSink::copyNToOne(inputs, output, 2, 1);
+
+    BlockOutputStreams outputs
+        = {std::make_shared<NullBlockOutputStream>(header),
+           std::make_shared<NullBlockOutputStream>(header),
+           std::make_shared<NullBlockOutputStream>(header)};
+
+    ParallelInputsSink::copyNToN(inputs, outputs);
 }
 
 int main(int argc, char ** argv)
