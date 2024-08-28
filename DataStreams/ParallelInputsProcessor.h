@@ -101,16 +101,18 @@ public:
 
     Block readImpl() override
     {
-        SemaphoreGuard<TSemapore> guard(io_samephore);
-
-        Input input = popInput();
-        if (!input.stream)
-            return {};
-
-        if (Block block = input.read())
         {
-            pushInput(std::move(input));
-            return block;
+            SemaphoreGuard<TSemapore> guard(io_samephore);
+
+            Input input = popInput();
+            if (!input.stream)
+                return {};
+
+            if (Block block = input.read())
+            {
+                pushInput(std::move(input));
+                return block;
+            }
         }
 
         if (isCancelled())
