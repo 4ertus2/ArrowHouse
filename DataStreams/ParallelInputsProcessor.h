@@ -45,12 +45,8 @@ private:
 };
 
 
-template <typename TSemapore = NoSemaphore>
-class TParallelInputsStream : public IBlockInputStream
+struct ParallelInput
 {
-public:
-    static constexpr ptrdiff_t MAX_SEMA_1K = 1000;
-
     enum Flags
     {
         NONE = 0,
@@ -58,42 +54,81 @@ public:
         SUFFIX = 0x2,
     };
 
-    struct Input
+    BlockInputStreamPtr stream;
+    uint32_t flags = NONE;
+    size_t i = 0;
+
+    ParallelInput(const BlockInputStreamPtr & in = {}, uint32_t flags_ = 0, size_t i_ = 0) : stream(in), flags(flags_), i(i_) { }
+
+    Block read()
     {
-        BlockInputStreamPtr stream;
-        uint32_t flags = NONE;
-        size_t i = 0;
-
-        Input(const BlockInputStreamPtr & in = {}, uint32_t flags_ = 0, size_t i_ = 0) : stream(in), flags(flags_), i(i_) { }
-
-        Block read()
+        if (flags & PREFIX)
         {
-            if (flags & PREFIX)
-            {
-                flags &= ~PREFIX;
-                stream->readPrefix();
-            }
-
-            Block block = stream->read();
-
-            if (flags & SUFFIX)
-            {
-                flags &= ~SUFFIX;
-                stream->readSuffix();
-            }
-            return block;
+            flags &= ~PREFIX;
+            stream->readPrefix();
         }
-    };
 
-    TParallelInputsStream(const BlockInputStreams & inputs_, uint32_t max_io_threads, uint32_t flags) : io_semaphore(max_io_threads)
+        Block block = stream->read();
+
+        if (flags & SUFFIX)
+        {
+            flags &= ~SUFFIX;
+            stream->readSuffix();
+        }
+        return block;
+    }
+};
+
+
+class AvailableInputsQueue
+{
+public:
+    using Input = ParallelInput;
+
+    AvailableInputsQueue(const BlockInputStreams & inputs_, uint32_t flags)
+    {
+        for (size_t i = 0; i < inputs_.size(); ++i)
+            inputs.emplace(inputs_[i], flags, i);
+    }
+
+    Input popInput()
+    {
+        std::lock_guard lock(mutex);
+
+        if (inputs.empty())
+            return {};
+
+        Input input = inputs.front();
+        inputs.pop();
+        return input;
+    }
+
+    void pushInput(Input && input)
+    {
+        std::lock_guard lock(mutex);
+
+        inputs.emplace(std::move(input));
+    }
+
+private:
+    std::queue<Input> inputs;
+    std::mutex mutex;
+};
+
+
+template <typename TSemapore = NoSemaphore, typename TQueue = AvailableInputsQueue>
+class TParallelInputsStream : public IBlockInputStream
+{
+public:
+    static constexpr ptrdiff_t MAX_SEMA_1K = 1000;
+
+    TParallelInputsStream(const BlockInputStreams & inputs_, uint32_t max_io_threads, uint32_t flags)
+        : queue(inputs_, flags), io_semaphore(max_io_threads)
     {
         if (inputs_.empty())
             throw std::runtime_error("unexpected empty inputs for ParallelInputsStream");
 
         children = inputs_;
-
-        for (size_t i = 0; i < inputs_.size(); ++i)
-            available_inputs.emplace(inputs_[i], flags, i);
     }
 
     String getName() const override { return "ParallelInputsStream"; }
@@ -104,13 +139,13 @@ public:
         {
             SemaphoreGuard<TSemapore> guard(io_semaphore);
 
-            Input input = popInput();
+            ParallelInput input = queue.popInput();
             if (!input.stream)
                 return {};
 
             if (Block block = input.read())
             {
-                pushInput(std::move(input));
+                queue.pushInput(std::move(input));
                 return block;
             }
         }
@@ -121,28 +156,8 @@ public:
     }
 
 private:
-    std::queue<Input> available_inputs;
-    std::mutex available_inputs_mutex;
+    TQueue queue;
     TSemapore io_semaphore;
-
-    Input popInput()
-    {
-        std::lock_guard lock(available_inputs_mutex);
-
-        if (available_inputs.empty())
-            return {};
-
-        Input input = available_inputs.front();
-        available_inputs.pop();
-        return input;
-    }
-
-    void pushInput(Input && input)
-    {
-        std::lock_guard lock(available_inputs_mutex);
-
-        available_inputs.emplace(std::move(input));
-    }
 };
 
 using ParallelInputsStream = TParallelInputsStream<>;
