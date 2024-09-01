@@ -3,9 +3,11 @@
 #include <atomic>
 #include <exception>
 #include <mutex>
+#include <optional>
 #include <queue>
 #include <semaphore>
 #include <thread>
+#include <type_traits>
 #include <unordered_map>
 #include <vector>
 
@@ -119,12 +121,64 @@ private:
 };
 
 
+class AffinityMap
+{
+public:
+    std::optional<size_t> getOrAdd(size_t max_size)
+    {
+        auto thread_id = std::this_thread::get_id();
+        std::lock_guard lock(mutex);
+
+        auto it = affinity.find(thread_id);
+        if (it != affinity.end())
+            return it->second;
+
+        if (affinity.size() < max_size)
+        {
+            size_t current = next;
+            affinity.emplace(thread_id, current);
+            ++next;
+            return current;
+        }
+        return {};
+    }
+
+    size_t get() const
+    {
+        auto thread_id = std::this_thread::get_id();
+        std::lock_guard lock(mutex);
+
+        auto it = affinity.find(thread_id);
+        if (it != affinity.end())
+            return it->second;
+
+        throw std::runtime_error("no affinity for thread");
+    }
+
+    size_t setNext()
+    {
+        auto thread_id = std::this_thread::get_id();
+        std::lock_guard lock(mutex);
+
+        size_t current = next;
+        affinity[thread_id] = current;
+        ++next;
+        return current;
+    }
+
+private:
+    std::unordered_map<std::thread::id, size_t> affinity;
+    mutable std::mutex mutex;
+    size_t next = 0;
+};
+
+
 class AffinedInputs
 {
 public:
     using Input = ParallelInput;
 
-    AffinedInputs(const BlockInputStreams & inputs_, uint32_t flags)
+    AffinedInputs(const BlockInputStreams & inputs_, AffinityMap & affinity_, uint32_t flags) : affinity(affinity_)
     {
         inputs.reserve(inputs_.size());
         for (size_t i = 0; i < inputs_.size(); ++i)
@@ -133,35 +187,16 @@ public:
 
     Input popInput()
     {
-        auto thread_id = std::this_thread::get_id();
-        std::lock_guard lock(mutex);
-
-        auto it = affinity.find(thread_id);
-        if (it != affinity.end())
-        {
-            return std::move(inputs[it->second]);
-        }
-        else if (affinity.size() < inputs.size())
-        {
-            size_t input_pos = affinity.size();
-            affinity.emplace(thread_id, input_pos);
-            return std::move(inputs[input_pos]);
-        }
+        if (auto pos = affinity.getOrAdd(inputs.size()); pos)
+            return std::move(inputs[*pos]);
         return {};
     }
 
-    void pushInput(Input && input)
-    {
-        auto thread_id = std::this_thread::get_id();
-        std::lock_guard lock(mutex);
-
-        inputs[affinity[thread_id]] = std::move(input);
-    }
+    void pushInput(Input && input) { inputs[affinity.get()] = std::move(input); }
 
 private:
     std::vector<Input> inputs;
-    std::unordered_map<std::thread::id, size_t> affinity;
-    std::mutex mutex;
+    AffinityMap & affinity;
 };
 
 
@@ -170,13 +205,23 @@ class TParallelInputsStream : public IBlockInputStream
 {
 public:
     static constexpr ptrdiff_t MAX_SEMA_1K = 1000;
+    static constexpr bool need_affinity = std::is_same_v<TQueue, AffinedInputs>;
 
     TParallelInputsStream(const BlockInputStreams & inputs_, uint32_t max_io_threads, uint32_t flags)
+    requires(!need_affinity)
         : queue(inputs_, flags), io_semaphore(max_io_threads)
     {
         if (inputs_.empty())
             throw std::runtime_error("unexpected empty inputs for ParallelInputsStream");
+        children = inputs_;
+    }
 
+    TParallelInputsStream(const BlockInputStreams & inputs_, AffinityMap & affinity, uint32_t max_io_threads, uint32_t flags)
+    requires(need_affinity)
+        : queue(inputs_, affinity, flags), io_semaphore(max_io_threads)
+    {
+        if (inputs_.empty())
+            throw std::runtime_error("unexpected empty inputs for ParallelInputsStream");
         children = inputs_;
     }
 
@@ -220,6 +265,11 @@ struct ParallelInputsHandler
     /// Processing the data block.
     void onBlock(Block && /*block*/, unsigned /*thread_num*/) { }
 
+    /// Then thead's stream is finished and it returns empty block we could ParallelInputsProcessor asks handler
+    /// to reset thread's stream (and potentially output).
+    /// returns false if there's no mo streams to read
+    bool onResetStream(unsigned /*thread_num*/) { return false; }
+
     /// Called for each thread, when the thread has nothing else to do.
     /// Due to the fact that part of the sources has run out, and now there are fewer sources left than streams.
     /// Called if the `onException` method does not throw an exception; is called before the `onFinish` method.
@@ -238,11 +288,27 @@ template <typename Handler>
 class ParallelInputsProcessor
 {
 public:
-    static BlockInputStreamPtr
-    MakeInputsStream(const BlockInputStreams & inputs_, unsigned max_compute_threads, unsigned max_io_threads, uint32_t flags = 0)
+    static std::shared_ptr<AffinityMap> MakAffinity(uint32_t flags)
     {
         if (flags & ParallelInput::AFFINITY)
-            return std::make_shared<AffinedInputsStream>(inputs_, inputs_.size(), flags);
+            return std::make_shared<AffinityMap>();
+        return {};
+    }
+
+    static BlockInputStreamPtr MakeInputsStream(
+        const BlockInputStreams & inputs_,
+        std::shared_ptr<AffinityMap> affinity,
+        unsigned max_compute_threads,
+        unsigned max_io_threads,
+        uint32_t flags = 0)
+    {
+        if (affinity)
+        {
+            unsigned io_threads = max_io_threads ? max_io_threads : max_compute_threads;
+            if (!io_threads)
+                io_threads = inputs_.size();
+            return std::make_shared<AffinedInputsStream>(inputs_, *affinity, io_threads, flags);
+        }
 
         if (max_io_threads && (max_compute_threads > max_io_threads))
             return std::make_shared<IOLimitedInputsStream>(inputs_, max_io_threads, flags);
@@ -252,7 +318,10 @@ public:
 
     ParallelInputsProcessor(
         const BlockInputStreams & inputs_, unsigned max_compute_threads, unsigned max_io_threads, Handler & handler_, uint32_t flags = 0)
-        : input(MakeInputsStream(inputs_, max_compute_threads, max_io_threads, flags)), max_threads(max_compute_threads), handler(handler_)
+        : affinity(MakAffinity(flags))
+        , input(MakeInputsStream(inputs_, affinity, max_compute_threads, max_io_threads, flags))
+        , max_threads(max_compute_threads)
+        , handler(handler_)
     {
     }
 
@@ -308,6 +377,7 @@ public:
 
     void cancel(bool kill) { input->cancel(kill); }
     size_t getNumActiveThreads() const { return active_threads; }
+    std::shared_ptr<AffinityMap> getAffinity() const { return affinity; }
 
 private:
     void thread(unsigned thread_num)
@@ -324,7 +394,7 @@ private:
                         break;
                     handler.onBlock(std::move(block), thread_num);
                 }
-                else
+                else if (!handler.onResetStream(thread_num))
                     break;
             }
             handler.onFinishThread(thread_num);
@@ -354,6 +424,7 @@ private:
         }
     }
 
+    std::shared_ptr<AffinityMap> affinity;
     BlockInputStreamPtr input;
     const unsigned max_threads;
     Handler & handler;
