@@ -288,14 +288,14 @@ template <typename Handler>
 class ParallelInputsProcessor
 {
 public:
-    static std::shared_ptr<AffinityMap> MakAffinity(uint32_t flags)
+    static std::shared_ptr<AffinityMap> makeAffinity(uint32_t flags)
     {
         if (flags & ParallelInput::AFFINITY)
             return std::make_shared<AffinityMap>();
         return {};
     }
 
-    static BlockInputStreamPtr MakeInputsStream(
+    static BlockInputStreamPtr makeInputsStream(
         const BlockInputStreams & inputs_,
         std::shared_ptr<AffinityMap> affinity,
         unsigned max_compute_threads,
@@ -318,8 +318,8 @@ public:
 
     ParallelInputsProcessor(
         const BlockInputStreams & inputs_, unsigned max_compute_threads, unsigned max_io_threads, Handler & handler_, uint32_t flags = 0)
-        : affinity(MakAffinity(flags))
-        , input(MakeInputsStream(inputs_, affinity, max_compute_threads, max_io_threads, flags))
+        : affinity(makeAffinity(flags))
+        , input(makeInputsStream(inputs_, affinity, max_compute_threads, max_io_threads, flags))
         , max_threads(max_compute_threads)
         , handler(handler_)
     {
