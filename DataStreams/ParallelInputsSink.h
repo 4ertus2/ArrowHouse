@@ -27,6 +27,17 @@ public:
             sink.getOutput(thread_num)->write(block);
         }
 
+        bool onResetStream(size_t /*thread_num*/)
+        {
+            if (auto affinity = sink.processor.getAffinity())
+            {
+                size_t pos = affinity->setNext();
+                if (pos < sink.outputs.size())
+                    return true;
+            }
+            return false;
+        }
+
         void onFinishThread(size_t /*thread_num*/) { }
         void onFinish() { }
 
@@ -60,13 +71,15 @@ public:
         mt_output->writeSuffix();
     }
 
-    static void copyNToN(const BlockInputStreams & inputs, BlockOutputStreams & outputs, ProgressCallback progress = {})
+    static void
+    copyNToN(const BlockInputStreams & inputs, BlockOutputStreams & outputs, unsigned max_threads = 0, ProgressCallback progress = {})
     {
         for (auto & output : outputs)
             output->writePrefix();
 
         constexpr uint32_t flags = ParallelInput::PREFIX | ParallelInput::SUFFIX | ParallelInput::AFFINITY;
-        ParallelInputsSink sink(inputs, outputs, flags, progress);
+        max_threads = max_threads ? max_threads : inputs.size();
+        ParallelInputsSink sink(inputs, outputs, max_threads, flags, progress);
         sink.process();
         sink.finalize();
 
@@ -95,7 +108,14 @@ public:
             std::rethrow_exception(exception);
     }
 
-    BlockOutputStreamPtr & getOutput(unsigned thread_num) { return (outputs.size() == 1) ? outputs[0] : outputs[thread_num]; }
+    BlockOutputStreamPtr & getOutput(unsigned thread_num)
+    {
+        if (outputs.size() == 1)
+            return outputs[0];
+        if (auto affinity = processor.getAffinity())
+            return outputs[affinity->get()];
+        return outputs[thread_num];
+    }
 
 private:
     Handler handler;
@@ -103,8 +123,9 @@ private:
     ParallelInputsProcessor<Handler> processor;
     std::exception_ptr exception;
 
-    ParallelInputsSink(const BlockInputStreams & inputs, BlockOutputStreams outputs, uint32_t flags, ProgressCallback progress = {})
-        : handler(*this, progress), outputs(outputs), processor(inputs, inputs.size(), 0, handler, flags)
+    ParallelInputsSink(
+        const BlockInputStreams & inputs, BlockOutputStreams outputs, unsigned max_threads, uint32_t flags, ProgressCallback progress = {})
+        : handler(*this, progress), outputs(outputs), processor(inputs, max_threads, max_threads, handler, flags)
     {
         if (inputs.size() != outputs.size())
             throw std::runtime_error("not expected");

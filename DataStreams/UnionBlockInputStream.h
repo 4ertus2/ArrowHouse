@@ -2,9 +2,9 @@
 
 #include <tuple>
 
-#include <Common/ConcurrentBoundedQueue.h>
 #include <DataStreams/IBlockInputStream.h>
 #include <DataStreams/ParallelInputsProcessor.h>
+#include <Common/ConcurrentBoundedQueue.h>
 
 
 namespace AH
@@ -29,9 +29,9 @@ private:
         Block block;
         std::exception_ptr exception;
 
-        OutputData() {}
-        OutputData(Block & block_) : block(block_) {}
-        OutputData(std::exception_ptr & exception_) : exception(exception_) {}
+        OutputData() { }
+        OutputData(Block & block_) : block(block_) { }
+        OutputData(std::exception_ptr & exception_) : exception(exception_) { }
     };
 
 public:
@@ -41,11 +41,11 @@ public:
         BlockInputStreams inputs,
         unsigned max_threads,
         unsigned max_io_threads = 0,
-        ExceptionCallback exception_callback_ = ExceptionCallback()
-    ) :
-        output_queue(std::min(inputs.size(), (size_t)max_threads)), handler(*this),
-        processor(inputs, max_threads, max_io_threads, handler),
-        exception_callback(exception_callback_)
+        ExceptionCallback exception_callback_ = ExceptionCallback())
+        : output_queue(std::min(inputs.size(), (size_t)max_threads))
+        , handler(*this)
+        , processor(inputs, max_threads, max_io_threads, handler)
+        , exception_callback(exception_callback_)
     {
         children = inputs;
 #if 0
@@ -138,9 +138,7 @@ protected:
     }
 
     /// Do nothing, to make the preparation for the query execution in parallel, in ParallelInputsProcessor.
-    void readPrefix() override
-    {
-    }
+    void readPrefix() override { }
 
     /** The following options are possible:
       * 1. `readImpl` function is called until it returns an empty block.
@@ -206,21 +204,12 @@ private:
 
     struct Handler
     {
-        Handler(UnionBlockInputStream & parent_) : parent(parent_) {}
+        Handler(UnionBlockInputStream & parent_) : parent(parent_) { }
 
-        void onBlock(Block && block, size_t /*thread_num*/)
-        {
-            std::ignore = parent.output_queue.push(Payload(block));
-        }
-
-        void onFinish()
-        {
-            std::ignore = parent.output_queue.push(Payload());
-        }
-
-        void onFinishThread(size_t /*thread_num*/)
-        {
-        }
+        void onBlock(Block && block, size_t /*thread_num*/) { std::ignore = parent.output_queue.push(Payload(block)); }
+        bool onResetStream(size_t /*thread_num*/) { return false; }
+        void onFinish() { std::ignore = parent.output_queue.push(Payload()); }
+        void onFinishThread(size_t /*thread_num*/) { }
 
         void onException(std::exception_ptr & exception, size_t /*thread_num*/)
         {
@@ -231,7 +220,7 @@ private:
             ///  and the exception is lost.
 
             std::ignore = parent.output_queue.push(exception);
-            parent.cancel(false);    /// Does not throw exceptions.
+            parent.cancel(false); /// Does not throw exceptions.
         }
 
         UnionBlockInputStream & parent;

@@ -162,24 +162,35 @@ TEST(StreamSmoke, UnionBlockInputStream)
 TEST(StreamSmoke, ParallelInputsSink)
 {
     std::shared_ptr<arrow::RecordBatch> src_batch = TestBatch();
-    BlockInputStreams inputs
-        = {std::make_shared<OneBlockInputStream>(src_batch),
-           std::make_shared<OneBlockInputStream>(src_batch),
-           std::make_shared<OneBlockInputStream>(src_batch)};
-
     auto header = src_batch->schema();
+
+    auto create_istreams = [&](unsigned num) -> BlockInputStreams
+    {
+        BlockInputStreams out;
+        for (unsigned i = 0; i < num; ++i)
+            out.emplace_back(std::make_shared<OneBlockInputStream>(src_batch));
+        return out;
+    };
+
+    auto create_ostreams = [&](unsigned num) -> BlockOutputStreams
+    {
+        BlockOutputStreams out;
+        for (unsigned i = 0; i < num; ++i)
+            out.emplace_back(std::make_shared<NullBlockOutputStream>(header));
+        return out;
+    };
+
     BlockOutputStreamPtr output = std::make_shared<NullBlockOutputStream>(header);
 
-    ParallelInputsSink::copyNToOne(inputs, output);
-    ParallelInputsSink::copyNToOne(inputs, output, 1, 1);
-    ParallelInputsSink::copyNToOne(inputs, output, 2, 1);
+    ParallelInputsSink::copyNToOne(create_istreams(3), output);
+    ParallelInputsSink::copyNToOne(create_istreams(3), output, 1, 1);
+    ParallelInputsSink::copyNToOne(create_istreams(3), output, 2, 1);
 
-    BlockOutputStreams outputs
-        = {std::make_shared<NullBlockOutputStream>(header),
-           std::make_shared<NullBlockOutputStream>(header),
-           std::make_shared<NullBlockOutputStream>(header)};
+    auto out1 = create_ostreams(5);
+    ParallelInputsSink::copyNToN(create_istreams(5), out1);
 
-    ParallelInputsSink::copyNToN(inputs, outputs);
+    auto out2 = create_ostreams(5);
+    ParallelInputsSink::copyNToN(create_istreams(5), out2, 2);
 }
 
 int main(int argc, char ** argv)
