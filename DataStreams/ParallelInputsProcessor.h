@@ -3,7 +3,6 @@
 #include <atomic>
 #include <exception>
 #include <mutex>
-#include <optional>
 #include <queue>
 #include <semaphore>
 #include <thread>
@@ -124,7 +123,7 @@ private:
 class AffinityMap
 {
 public:
-    std::optional<size_t> getOrAdd(size_t max_size)
+    size_t getOrAdd()
     {
         auto thread_id = std::this_thread::get_id();
         std::lock_guard lock(mutex);
@@ -133,14 +132,10 @@ public:
         if (it != affinity.end())
             return it->second;
 
-        if (affinity.size() < max_size)
-        {
-            size_t current = next;
-            affinity.emplace(thread_id, current);
-            ++next;
-            return current;
-        }
-        return {};
+        size_t current = next;
+        affinity.emplace(thread_id, current);
+        ++next;
+        return current;
     }
 
     size_t get() const
@@ -187,8 +182,8 @@ public:
 
     Input popInput()
     {
-        if (auto pos = affinity.getOrAdd(inputs.size()); pos)
-            return std::move(inputs[*pos]);
+        if (auto pos = affinity.getOrAdd(); pos < inputs.size())
+            return std::move(inputs[pos]);
         return {};
     }
 
@@ -246,7 +241,7 @@ public:
 
         if (isCancelled())
             return {};
-        return read();
+        return readImpl();
     }
 
 private:

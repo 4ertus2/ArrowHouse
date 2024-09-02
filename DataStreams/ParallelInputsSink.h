@@ -13,7 +13,7 @@ namespace AH
 class ParallelInputsSink
 {
 public:
-    using ProgressCallback = std::function<void(const Block & clock, unsigned thread_num)>;
+    using ProgressCallback = std::function<void(const Block & block, unsigned thread_num)>;
 
     class Handler
     {

@@ -185,12 +185,15 @@ TEST(StreamSmoke, ParallelInputsSink)
     ParallelInputsSink::copyNToOne(create_istreams(3), output);
     ParallelInputsSink::copyNToOne(create_istreams(3), output, 1, 1);
     ParallelInputsSink::copyNToOne(create_istreams(3), output, 2, 1);
-
+#if 0
+    auto progress
+        = [](const Block & block, unsigned thread_num) { std::cerr << std::this_thread::get_id() << " " << thread_num << std::endl; };
+#endif
     auto out1 = create_ostreams(5);
-    ParallelInputsSink::copyNToN(create_istreams(5), out1);
+    ParallelInputsSink::copyNToN(create_istreams(5), out1); //, 0, progress);
 
     auto out2 = create_ostreams(5);
-    ParallelInputsSink::copyNToN(create_istreams(5), out2, 2);
+    ParallelInputsSink::copyNToN(create_istreams(5), out2, 2); //, progress);
 }
 
 int main(int argc, char ** argv)
