@@ -17,19 +17,7 @@ Block IBlockInputStream::read()
     if (isCancelledOrThrowIfKilled())
         return res;
 
-    res = readImpl();
-    if (!res)
-    {
-        /** If the stream is over, then we will ask all children to abort the execution.
-          * This makes sense when running a query with LIMIT
-          * - there is a situation when all the necessary data has already been read,
-          *   but children sources are still working,
-          *   herewith they can work in separate threads or even remotely.
-          */
-        cancel(false);
-    }
-
-    return res;
+    return readImpl();
 }
 
 
