@@ -2,6 +2,7 @@
 
 #include <atomic>
 #include <exception>
+#include <limits>
 #include <mutex>
 #include <queue>
 #include <semaphore>
@@ -60,9 +61,18 @@ struct ParallelInput
 
     BlockInputStreamPtr stream;
     uint32_t flags = NONE;
-    size_t i = 0;
 
-    ParallelInput(const BlockInputStreamPtr & in = {}, uint32_t flags_ = 0, size_t i_ = 0) : stream(in), flags(flags_), i(i_) { }
+    ParallelInput(const BlockInputStreamPtr & in = {}, uint32_t flags_ = 0) : stream(in), flags(flags_) { }
+    ParallelInput(ParallelInput &&) = default;
+    ParallelInput(const ParallelInput &) = delete;
+    ParallelInput & operator=(ParallelInput &&) = default;
+    ParallelInput & operator=(const ParallelInput &) = delete;
+
+    ~ParallelInput()
+    {
+        if (stream && (flags & SUFFIX))
+            stream->readSuffix();
+    }
 
     Block read()
     {
@@ -71,15 +81,36 @@ struct ParallelInput
             flags &= ~PREFIX;
             stream->readPrefix();
         }
+        return stream->read();
+    }
+};
 
-        Block block = stream->read();
 
-        if (flags & SUFFIX)
+struct ParallelOutput
+{
+    BlockOutputStreamPtr stream;
+    uint32_t flags = ParallelInput::NONE;
+
+    ParallelOutput(const BlockOutputStreamPtr & out = {}, uint32_t flags_ = 0) : stream(out), flags(flags_) { }
+    ParallelOutput(ParallelOutput &&) = default;
+    ParallelOutput(const ParallelOutput &) = delete;
+    ParallelOutput & operator=(ParallelOutput &&) = default;
+    ParallelOutput & operator=(const ParallelOutput &) = delete;
+
+    ~ParallelOutput()
+    {
+        if (stream && (flags & ParallelInput::SUFFIX))
+            stream->writeSuffix();
+    }
+
+    void write(Block & block)
+    {
+        if (flags & ParallelInput::PREFIX)
         {
-            flags &= ~SUFFIX;
-            stream->readSuffix();
+            flags &= ~ParallelInput::PREFIX;
+            stream->writePrefix();
         }
-        return block;
+        stream->write(block);
     }
 };
 
@@ -92,7 +123,7 @@ public:
     AvailableInputsQueue(const BlockInputStreams & inputs_, uint32_t flags)
     {
         for (size_t i = 0; i < inputs_.size(); ++i)
-            inputs.emplace(inputs_[i], flags, i);
+            inputs.emplace(inputs_[i], flags);
     }
 
     Input popInput()
@@ -102,7 +133,7 @@ public:
         if (inputs.empty())
             return {};
 
-        Input input = inputs.front();
+        Input input(std::move(inputs.front()));
         inputs.pop();
         return input;
     }
@@ -123,21 +154,6 @@ private:
 class AffinityMap
 {
 public:
-    size_t getOrAdd()
-    {
-        auto thread_id = std::this_thread::get_id();
-        std::lock_guard lock(mutex);
-
-        auto it = affinity.find(thread_id);
-        if (it != affinity.end())
-            return it->second;
-
-        size_t current = next;
-        affinity.emplace(thread_id, current);
-        ++next;
-        return current;
-    }
-
     size_t get() const
     {
         auto thread_id = std::this_thread::get_id();
@@ -147,7 +163,7 @@ public:
         if (it != affinity.end())
             return it->second;
 
-        throw std::runtime_error("no affinity for thread");
+        return std::numeric_limits<size_t>::max();
     }
 
     size_t setNext()
@@ -177,12 +193,12 @@ public:
     {
         inputs.reserve(inputs_.size());
         for (size_t i = 0; i < inputs_.size(); ++i)
-            inputs.push_back(ParallelInput(inputs_[i], flags, i));
+            inputs.push_back(ParallelInput(inputs_[i], flags));
     }
 
     Input popInput()
     {
-        if (auto pos = affinity.getOrAdd(); pos < inputs.size())
+        if (size_t pos = affinity.get(); pos < inputs.size())
             return std::move(inputs[pos]);
         return {};
     }
@@ -381,6 +397,8 @@ private:
 
         try
         {
+            handler.onResetStream(thread_num);
+
             while (!input->isCancelled())
             {
                 if (Block block = input->read())
