@@ -119,7 +119,7 @@ private:
     std::exception_ptr exception;
 
     ParallelInputsSink(
-        const BlockInputStreams & inputs, BlockOutputStreams outputs_, unsigned max_threads, uint32_t flags, ProgressCallback progress = {})
+        const BlockInputStreams & inputs, BlockOutputStreams & outputs_, unsigned max_threads, uint32_t flags, ProgressCallback progress = {})
         : handler(*this, progress), processor(inputs, max_threads, max_threads, handler, flags)
     {
         outputs.reserve(outputs_.size());
