@@ -32,7 +32,7 @@ public:
             {
                 size_t current = affinity->get();
                 if (current < sink.outputs.size())
-                    sink.outputs[current] = {};
+                    sink.outputs[current].destroy();
 
                 size_t next = affinity->setNext();
                 if (next < sink.outputs.size())

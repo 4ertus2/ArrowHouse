@@ -68,10 +68,14 @@ struct ParallelInput
     ParallelInput & operator=(ParallelInput &&) = default;
     ParallelInput & operator=(const ParallelInput &) = delete;
 
-    ~ParallelInput()
+    ~ParallelInput() { destroy(); }
+
+    void destroy()
     {
         if (stream && (flags & SUFFIX))
             stream->readSuffix();
+        stream = {};
+        flags = 0;
     }
 
     Block read()
@@ -94,13 +98,17 @@ struct ParallelOutput
     ParallelOutput(const BlockOutputStreamPtr & out = {}, uint32_t flags_ = 0) : stream(out), flags(flags_) { }
     ParallelOutput(ParallelOutput &&) = default;
     ParallelOutput(const ParallelOutput &) = delete;
-    ParallelOutput & operator=(ParallelOutput &&) = default;
+    ParallelOutput & operator=(ParallelOutput &&) = delete;
     ParallelOutput & operator=(const ParallelOutput &) = delete;
 
-    ~ParallelOutput()
+    ~ParallelOutput() { destroy(); }
+
+    void destroy()
     {
         if (stream && (flags & ParallelInput::SUFFIX))
             stream->writeSuffix();
+        stream = {};
+        flags = 0;
     }
 
     void write(Block & block)
