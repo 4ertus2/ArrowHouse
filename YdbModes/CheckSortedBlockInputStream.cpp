@@ -23,8 +23,8 @@ static std::partial_ordering compare(const T & left, const U & right, const Sort
     return std::partial_ordering::equivalent;
 }
 
-CheckSortedBlockInputStream::CheckSortedBlockInputStream(const BlockInputStreamPtr & input_, const SortDescription & sort_description_)
-    : header(input_->getHeader()), sort_description(sort_description_)
+CheckSortedBlockInputStream::CheckSortedBlockInputStream(const InputStreamPtr & input_, const SortDescription & sort_description_)
+    : header(IBlockInputStream::getHeader(input_)), sort_description(sort_description_)
 {
     children.push_back(input_);
 }

@@ -446,7 +446,7 @@ TEST(SortingBlockInputStream, YdbModes)
     }
 
     auto stream = std::make_shared<AHY::SortingBlockInputStream>(one, sort_descr);
-    auto sorted = stream->read();
+    Block sorted = stream->read();
     EXPECT_EQ(sorted->num_rows(), 1000);
     EXPECT_TRUE(CheckSorted1000(sorted));
 }
@@ -468,13 +468,13 @@ TEST(MergingSortedInputStream, YdbModes)
 
     std::vector<std::shared_ptr<arrow::RecordBatch>> sorted;
     { // maxBatchSize = 500, no limit
-        std::vector<BlockInputStreamPtr> streams;
+        std::vector<InputStreamPtr> streams;
         for (auto & batch : batches)
             streams.push_back(std::make_shared<OneBlockInputStream>(batch));
 
-        BlockInputStreamPtr mergeStream = std::make_shared<AHY::MergingSortedInputStream>(streams, descr, 500);
+        InputStreamPtr mergeStream = std::make_shared<AHY::MergingSortedInputStream>(streams, descr, 500);
 
-        while (auto batch = mergeStream->read())
+        while (Block batch = mergeStream->read())
             sorted.emplace_back(batch);
     }
 
@@ -506,13 +506,13 @@ TEST(MergingSortedInputStreamReversed, YdbModes)
 
     std::vector<std::shared_ptr<arrow::RecordBatch>> sorted;
     { // maxBatchSize = 500, no limit
-        std::vector<BlockInputStreamPtr> streams;
+        std::vector<InputStreamPtr> streams;
         for (auto & batch : batches)
             streams.push_back(std::make_shared<AH::OneBlockInputStream>(batch));
 
-        BlockInputStreamPtr mergeStream = std::make_shared<AHY::MergingSortedInputStream>(streams, descr, 500);
+        InputStreamPtr mergeStream = std::make_shared<AHY::MergingSortedInputStream>(streams, descr, 500);
 
-        while (auto batch = mergeStream->read())
+        while (Block batch = mergeStream->read())
             sorted.emplace_back(batch);
     }
 
@@ -546,13 +546,13 @@ TEST(MergingSortedInputStreamReplace, YdbModes)
 
     std::vector<std::shared_ptr<arrow::RecordBatch>> sorted;
     {
-        std::vector<BlockInputStreamPtr> streams;
+        std::vector<InputStreamPtr> streams;
         for (auto & batch : batches)
             streams.push_back(std::make_shared<AH::OneBlockInputStream>(batch));
 
-        BlockInputStreamPtr mergeStream = std::make_shared<AHY::MergingSortedInputStream>(streams, descr, 5000);
+        InputStreamPtr mergeStream = std::make_shared<AHY::MergingSortedInputStream>(streams, descr, 5000);
 
-        while (auto batch = mergeStream->read())
+        while (Block batch = mergeStream->read())
             sorted.emplace_back(batch);
     }
 
@@ -589,13 +589,13 @@ TEST(MergingSortedInputStreamReplaceReversed, YdbModes)
 
     std::vector<std::shared_ptr<arrow::RecordBatch>> sorted;
     {
-        std::vector<BlockInputStreamPtr> streams;
+        std::vector<InputStreamPtr> streams;
         for (auto & batch : batches)
             streams.push_back(std::make_shared<AH::OneBlockInputStream>(batch));
 
-        BlockInputStreamPtr mergeStream = std::make_shared<AHY::MergingSortedInputStream>(streams, descr, 5000);
+        InputStreamPtr mergeStream = std::make_shared<AHY::MergingSortedInputStream>(streams, descr, 5000);
 
-        while (auto batch = mergeStream->read())
+        while (Block batch = mergeStream->read())
             sorted.emplace_back(batch);
     }
 
@@ -632,13 +632,13 @@ TEST(MergeSortingInputStream, YdbModes)
 
     std::vector<std::shared_ptr<arrow::RecordBatch>> sorted;
     { // maxBatchSize = 500, no limit
-        std::vector<BlockInputStreamPtr> streams;
+        std::vector<InputStreamPtr> streams;
         for (auto & batch : batches)
             streams.push_back(std::make_shared<OneBlockInputStream>(batch));
         auto s = std::make_shared<AH::ConcatBlockInputStream>(streams);
 
         auto mergeStream = std::make_shared<AH::MergeSortingBlockInputStream>(s, sort_descr, 500);
-        while (auto batch = mergeStream->read())
+        while (Block batch = mergeStream->read())
             sorted.emplace_back(batch);
     }
 

@@ -5,11 +5,11 @@
 namespace AHY
 {
 
-ExpressionBlockInputStream::ExpressionBlockInputStream(const BlockInputStreamPtr & input, ProgramPtr ssa_) : ssa(ssa_)
+ExpressionBlockInputStream::ExpressionBlockInputStream(const InputStreamPtr & input, ProgramPtr ssa_) : ssa(ssa_)
 {
     children.push_back(input);
 
-    auto schema = children.back()->getHeader();
+    auto schema = IBlockInputStream::getHeader(children.back());
     auto empty_batch = *arrow::RecordBatch::MakeEmpty(schema);
     applyProgram(empty_batch, *ssa).ok();
     cached_header = empty_batch->schema();

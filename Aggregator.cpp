@@ -549,7 +549,7 @@ bool Aggregator::checkLimits(size_t result_size, bool & no_more_keys) const
     return true;
 }
 
-void Aggregator::execute(const BlockInputStreamPtr & stream, AggregatedDataVariants & result)
+void Aggregator::execute(const InputStreamPtr & stream, AggregatedDataVariants & result)
 {
     ColumnRawPtrs key_columns(params.keys_size);
     AggregateColumns aggregate_columns(params.aggregates_size);
@@ -572,7 +572,7 @@ void Aggregator::execute(const BlockInputStreamPtr & stream, AggregatedDataVaria
     /// To do this, we pass a block with zero rows to aggregate.
     if (result.empty() && params.keys_size == 0 && !params.empty_result_for_aggregation_by_empty_set)
     {
-        auto emptyColumns = columnsFromHeader(stream->getHeader());
+        auto emptyColumns = columnsFromHeader(IBlockInputStream::getHeader(stream));
         executeOnBlock(emptyColumns, 0, 0, result, key_columns, aggregate_columns, no_more_keys);
     }
 }
@@ -1312,7 +1312,7 @@ bool Aggregator::mergeOnBlock(Block block, AggregatedDataVariants & result, bool
     return true;
 }
 
-void Aggregator::mergeStream(const BlockInputStreamPtr & stream, AggregatedDataVariants & result)
+void Aggregator::mergeStream(const InputStreamPtr & stream, AggregatedDataVariants & result)
 {
 #if 0
     if (isCancelled())

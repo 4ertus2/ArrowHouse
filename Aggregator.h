@@ -631,7 +631,7 @@ public:
     explicit Aggregator(const Params & params_);
 
     /// Aggregate the source. Get the result in the form of one of the data structures.
-    void execute(const BlockInputStreamPtr & stream, AggregatedDataVariants & result);
+    void execute(const InputStreamPtr & stream, AggregatedDataVariants & result);
 
     using AggregateColumns = std::vector<ColumnRawPtrs>;
     using AggregateFunctionsPlainPtrs = std::vector<const IAggregateFunction *>;
@@ -661,7 +661,7 @@ public:
     /** Merge the stream of partially aggregated blocks into one data structure.
       * (Pre-aggregate several blocks that represent the result of independent aggregations from remote servers.)
       */
-    void mergeStream(const BlockInputStreamPtr & stream, AggregatedDataVariants & result);
+    void mergeStream(const InputStreamPtr & stream, AggregatedDataVariants & result);
 
     using BucketToBlocks = std::map<Int32, BlocksList>;
     /// Merge partially aggregated blocks separated to buckets into one data structure.

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <Common/SortDescription.h>
 #include <DataStreams/IBlockInputStream.h>
+#include <Common/SortDescription.h>
 
 
 namespace AH
@@ -14,8 +14,7 @@ class MergeSortingBlockInputStream : public IBlockInputStream
 {
 public:
     /// limit - if not 0, allowed to return just first 'limit' rows in sorted order.
-    MergeSortingBlockInputStream(const BlockInputStreamPtr & input, const SortDescription & description_,
-        size_t max_merged_block_size_);
+    MergeSortingBlockInputStream(const InputStreamPtr & input, const SortDescription & description_, size_t max_merged_block_size_);
 
     Header getHeader() const override { return header; }
 
@@ -31,7 +30,7 @@ private:
     size_t sum_bytes_in_blocks = 0;
     std::unique_ptr<IBlockInputStream> impl;
     Header header;
-    //BlockInputStreams inputs_to_merge;
+    //InputStreams inputs_to_merge;
 };
 
 }

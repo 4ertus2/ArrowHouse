@@ -102,7 +102,7 @@ private:
 };
 
 MergingSortedInputStream::MergingSortedInputStream(
-    const std::vector<BlockInputStreamPtr> & inputs,
+    const std::vector<InputStreamPtr> & inputs,
     std::shared_ptr<ReplaceSortDescription> description_,
     size_t max_batch_rows_,
     bool slice)
@@ -113,7 +113,7 @@ MergingSortedInputStream::MergingSortedInputStream(
     , cursors(inputs.size())
 {
     children.insert(children.end(), inputs.begin(), inputs.end());
-    header = children.at(0)->getHeader();
+    header = IBlockInputStream::getHeader(children.at(0));
 }
 
 MergingSortedInputStream::MergingSortedInputStream(
@@ -127,7 +127,7 @@ MergingSortedInputStream::MergingSortedInputStream(
 
     source_batches.resize(children.size());
     cursors.resize(children.size());
-    header = children.at(0)->getHeader();
+    header = IBlockInputStream::getHeader(children.at(0));
 
     description = std::make_shared<ReplaceSortDescription>(description_, header);
 }

@@ -8,8 +8,8 @@
 #include <DataStreams/IBlockStream_fwd.h>
 
 #include <atomic>
-#include <shared_mutex>
 #include <mutex>
+#include <shared_mutex>
 
 
 namespace AH
@@ -21,27 +21,21 @@ namespace AH
   * Lets you get information for profiling: rows per second, blocks per second, megabytes per second, etc.
   * Allows you to stop reading data (in nested sources).
   */
-class IBlockInputStream
+class IInputStream
 {
 public:
-    IBlockInputStream() {}
-    virtual ~IBlockInputStream() {}
+    IInputStream() { }
+    virtual ~IInputStream() { }
 
-    IBlockInputStream(const IBlockInputStream &) = delete;
-    IBlockInputStream & operator=(const IBlockInputStream &) = delete;
-
-    /** Get data structure of the stream in a form of "header" block (it is also called "sample block").
-      * Header block contains column names, data types, columns of size 0. Constant columns must have corresponding values.
-      * It is guaranteed that method "read" returns blocks of exactly that structure.
-      */
-    virtual Header getHeader() const = 0;
+    IInputStream(const IInputStream &) = delete;
+    IInputStream & operator=(const IInputStream &) = delete;
 
     /** Read next block.
       * If there are no more blocks, return an empty block (for which operator `bool` returns false).
       * NOTE: Only one thread can read from one instance of IBlockInputStream simultaneously.
       * This also applies for readPrefix, readSuffix.
       */
-    Block read();
+    Clod read();
 
     /** Read something before starting all data or after the end of all data.
       * In the `readSuffix` function, you can implement a finalization that can lead to an exception.
@@ -76,12 +70,12 @@ public:
     bool isCancelledOrThrowIfKilled() const;
 
 protected:
-    BlockInputStreams children;
+    InputStreams children;
     std::shared_mutex children_mutex;
 
     std::atomic<bool> is_cancelled{false};
 
-    void addChild(const BlockInputStreamPtr & child)
+    void addChild(const InputStreamPtr & child)
     {
         std::unique_lock lock(children_mutex);
         children.push_back(child);
@@ -92,10 +86,10 @@ private:
     virtual Block readImpl() = 0;
 
     /// Here you can do a preliminary initialization.
-    virtual void readPrefixImpl() {}
+    virtual void readPrefixImpl() { }
 
     /// Here you need to do a finalization, which can lead to an exception.
-    virtual void readSuffixImpl() {}
+    virtual void readSuffixImpl() { }
 
     template <typename F>
     void forEachChild(F && f)
@@ -111,6 +105,21 @@ private:
             if (f(*child))
                 return;
     }
+};
+
+
+class IBlockInputStream : public IInputStream
+{
+public:
+    IBlockInputStream() { }
+
+    /** Get data structure of the stream in a form of "header" block (it is also called "sample block").
+      * Header block contains column names, data types, columns of size 0. Constant columns must have corresponding values.
+      * It is guaranteed that method "read" returns blocks of exactly that structure.
+      */
+    virtual Header getHeader() const = 0;
+
+    static Header getHeader(const InputStreamPtr & stream) { return std::static_pointer_cast<IBlockInputStream>(stream)->getHeader(); }
 };
 
 }

@@ -12,13 +12,13 @@ namespace AH
 class ConcatBlockInputStream : public IBlockInputStream
 {
 public:
-    ConcatBlockInputStream(BlockInputStreams inputs_)
+    ConcatBlockInputStream(InputStreams inputs_)
     {
         children.insert(children.end(), inputs_.begin(), inputs_.end());
         current_stream = children.begin();
     }
 
-    Header getHeader() const override { return children.at(0)->getHeader(); }
+    Header getHeader() const override { return IBlockInputStream::getHeader(children.at(0)); }
 
     /// We call readSuffix prematurely by ourself. Suppress default behaviour.
     void readSuffix() override { }
@@ -45,7 +45,7 @@ protected:
     }
 
 private:
-    BlockInputStreams::iterator current_stream;
+    InputStreams::iterator current_stream;
 };
 
 }

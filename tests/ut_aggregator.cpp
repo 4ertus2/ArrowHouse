@@ -130,21 +130,21 @@ AggregateDescription MakeAvgDescription(DataTypePtr data_type, uint32_t column_i
     return AggregateDescription{.function = wrapped->getHouseFunction(list_of_types), .arguments = {column_id}, .column_name = column_name};
 }
 
-BlockInputStreamPtr MakeAggregatingStream(
-    const BlockInputStreamPtr & stream, const ColumnNumbers & agg_keys, const AggregateDescriptions & aggregate_descriptions)
+InputStreamPtr
+MakeAggregatingStream(const InputStreamPtr & stream, const ColumnNumbers & agg_keys, const AggregateDescriptions & aggregate_descriptions)
 {
-    Header src_header = stream->getHeader();
+    Header src_header = IBlockInputStream::getHeader(stream);
     Aggregator::Params agg_params(false, src_header, agg_keys, aggregate_descriptions, false);
-    BlockInputStreamPtr agg_stream = std::make_shared<AggregatingBlockInputStream>(stream, agg_params, false);
+    InputStreamPtr agg_stream = std::make_shared<AggregatingBlockInputStream>(stream, agg_params, false);
 
     ColumnNumbers merge_keys;
     {
-        Header agg_header = agg_stream->getHeader();
+        Header agg_header = IBlockInputStream::getHeader(agg_stream);
         for (const auto & key : agg_keys)
             merge_keys.push_back(agg_header->GetFieldIndex(src_header->field(key)->name()));
     }
 
-    Aggregator::Params merge_params(true, agg_stream->getHeader(), merge_keys, aggregate_descriptions, false);
+    Aggregator::Params merge_params(true, IBlockInputStream::getHeader(agg_stream), merge_keys, aggregate_descriptions, false);
     return std::make_shared<MergingAggregatedBlockInputStream>(agg_stream, merge_params, true);
 }
 
@@ -152,10 +152,10 @@ bool TestExecute(const Block & block, const ColumnNumbers & agg_keys)
 {
     try
     {
-        BlockInputStreamPtr stream = std::make_shared<OneBlockInputStream>(block);
+        InputStreamPtr stream = std::make_shared<OneBlockInputStream>(block);
 
         AggregateDescription aggregate_description = MakeCountDescription();
-        Aggregator::Params params(false, stream->getHeader(), agg_keys, {aggregate_description}, false);
+        Aggregator::Params params(false, IBlockInputStream::getHeader(stream), agg_keys, {aggregate_description}, false);
         Aggregator aggregator(params);
 
         AggregatedDataVariants aggregated_data_variants;
@@ -195,7 +195,7 @@ size_t TestAggregate(const Block & block, const ColumnNumbers & agg_keys, const 
 
         auto stream = MakeAggregatingStream(std::make_shared<OneBlockInputStream>(block), agg_keys, {description});
 
-        while (auto block = stream->read())
+        while (Block block = stream->read())
         {
             std::cerr << "result rows: " << block->num_rows() << std::endl;
             rows += block->num_rows();

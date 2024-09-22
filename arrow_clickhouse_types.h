@@ -1,10 +1,10 @@
 #pragma once
 #include <cstdint>
-#include <string>
-#include <vector>
 #include <list>
 #include <map>
 #include <stdexcept>
+#include <string>
+#include <vector>
 
 #include <cstdint>
 
@@ -13,8 +13,8 @@
 #include <arrow/util/bitmap.h>
 
 #include <common/StringRef.h>
-#include <common/extended_types.h>
 #include <common/defines.h>
+#include <common/extended_types.h>
 
 #include <Common/PODArray_fwd.h>
 
@@ -24,13 +24,13 @@ namespace AH
 /// What to do if the limit is exceeded.
 enum class OverflowMode
 {
-    THROW     = 0,    /// Throw exception.
-    BREAK     = 1,    /// Abort query execution, return what is.
+    THROW = 0, /// Throw exception.
+    BREAK = 1, /// Abort query execution, return what is.
 
     /** Only for GROUP BY: do not add new rows to the set,
       * but continue to aggregate for keys that are already in the set.
       */
-    ANY       = 2,
+    ANY = 2,
 };
 
 using Exception = std::runtime_error;
@@ -60,7 +60,8 @@ using MutableColumn = arrow::ArrayBuilder;
 using MutableColumnPtr = std::shared_ptr<arrow::ArrayBuilder>;
 using MutableColumns = std::vector<MutableColumnPtr>;
 
-struct XColumn {
+struct XColumn
+{
     using Offset = UInt64;
     using Offsets = PaddedPODArray<Offset>;
 
@@ -143,10 +144,10 @@ using AggregateFunctionPtr = std::shared_ptr<const IAggregateFunction>;
 struct AggregateDescription
 {
     AggregateFunctionPtr function;
-    Array parameters;        /// Parameters of the (parametric) aggregate function.
+    Array parameters; /// Parameters of the (parametric) aggregate function.
     ColumnNumbers arguments;
-    Names argument_names;    /// used if no `arguments` are specified.
-    String column_name;      /// What name to use for a column with aggregate function values
+    Names argument_names; /// used if no `arguments` are specified.
+    String column_name; /// What name to use for a column with aggregate function values
 };
 
 using AggregateDescriptions = std::vector<AggregateDescription>;
@@ -155,30 +156,40 @@ using AggregateColumnsData = std::vector<arrow::UInt64Builder *>;
 using AggregateColumnsConstData = std::vector<const arrow::UInt64Array *>;
 
 
-inline Columns columnsFromHeader(const Header& schema, size_t num_rows = 0)
+inline Columns columnsFromHeader(const Header & schema, size_t num_rows = 0)
 {
     std::vector<std::shared_ptr<arrow::Array>> columns;
     columns.reserve(schema->num_fields());
 
-    for (auto& field : schema->fields()) {
+    for (auto & field : schema->fields())
         columns.emplace_back(*arrow::MakeArrayOfNull(field->type(), num_rows));
-    }
     return columns;
 }
 
-inline Block blockFromHeader(const Header& schema, size_t num_rows = 0)
+inline Block blockFromHeader(const Header & schema, size_t num_rows = 0)
 {
     return arrow::RecordBatch::Make(schema, num_rows, columnsFromHeader(schema, num_rows));
 }
+
+struct Clod
+{
+    Block block;
+
+    Clod() = default;
+    Clod(const Block & block_) : block(block_) { }
+    Clod(Block && block_) : block(std::move(block_)) { }
+
+    operator Block() { return block; }
+};
 
 template <typename To, typename From>
 inline To assert_cast(From && from)
 {
 #ifndef NDEBUG
-    if constexpr (std::is_pointer_v<To>) {
-        if (!dynamic_cast<To>(from)) {
+    if constexpr (std::is_pointer_v<To>)
+    {
+        if (!dynamic_cast<To>(from))
             throw std::bad_cast();
-        }
     }
     return dynamic_cast<To>(from);
 #else

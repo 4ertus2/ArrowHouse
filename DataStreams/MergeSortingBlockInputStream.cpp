@@ -8,14 +8,11 @@ namespace AH
 using MergingSortedBlockInputStream = AHY::MergingSortedInputStream;
 
 MergeSortingBlockInputStream::MergeSortingBlockInputStream(
-    const BlockInputStreamPtr & input,
-    const SortDescription & description_,
-    size_t max_merged_block_size_)
-    : description(description_)
-    , max_merged_block_size(max_merged_block_size_)
+    const InputStreamPtr & input, const SortDescription & description_, size_t max_merged_block_size_)
+    : description(description_), max_merged_block_size(max_merged_block_size_)
 {
     children.push_back(input);
-    header = children.at(0)->getHeader();
+    header = IBlockInputStream::getHeader(children.at(0));
 }
 
 

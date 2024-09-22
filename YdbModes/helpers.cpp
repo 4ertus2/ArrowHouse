@@ -16,7 +16,7 @@
 namespace AHY
 {
 
-using AH::BlockInputStreams;
+using AH::InputStreams;
 
 namespace
 {
@@ -330,7 +330,7 @@ bool ReserveData(arrow::ArrayBuilder & builder, const size_t size)
 std::shared_ptr<arrow::RecordBatch> CombineSortedBatches(
     const std::vector<std::shared_ptr<arrow::RecordBatch>> & batches, const std::shared_ptr<ReplaceSortDescription> & description)
 {
-    BlockInputStreams streams;
+    InputStreams streams;
     for (auto & batch : batches)
         streams.push_back(std::make_shared<AH::OneBlockInputStream>(batch));
 
@@ -345,7 +345,7 @@ std::vector<std::shared_ptr<arrow::RecordBatch>> MergeSortedBatches(
     size_t max_batch_rows)
 {
     uint64_t num_rows = 0;
-    BlockInputStreams streams;
+    InputStreams streams;
     streams.reserve(batches.size());
     for (auto & batch : batches)
     {

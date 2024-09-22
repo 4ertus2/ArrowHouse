@@ -11,7 +11,7 @@ namespace AH
 /// It's safe to access children without mutex as long as these methods are called before first call to `read()` or `readPrefix()`.
 
 
-Block IBlockInputStream::read()
+Clod IInputStream::read()
 {
     Block res;
     if (isCancelledOrThrowIfKilled())
@@ -21,11 +21,11 @@ Block IBlockInputStream::read()
 }
 
 
-void IBlockInputStream::readPrefix()
+void IInputStream::readPrefix()
 {
     readPrefixImpl();
 
-    forEachChild([&] (IBlockInputStream & child)
+    forEachChild([&] (IInputStream & child)
     {
         child.readPrefix();
         return false;
@@ -33,9 +33,9 @@ void IBlockInputStream::readPrefix()
 }
 
 
-void IBlockInputStream::readSuffix()
+void IInputStream::readSuffix()
 {
-    forEachChild([&] (IBlockInputStream & child)
+    forEachChild([&] (IInputStream & child)
     {
         child.readSuffix();
         return false;
@@ -45,7 +45,7 @@ void IBlockInputStream::readSuffix()
 }
 
 
-void IBlockInputStream::cancel(bool kill)
+void IInputStream::cancel(bool kill)
 {
 #if 0
     if (kill)
@@ -55,7 +55,7 @@ void IBlockInputStream::cancel(bool kill)
     if (!is_cancelled.compare_exchange_strong(old_val, true, std::memory_order_seq_cst, std::memory_order_relaxed))
         return;
 
-    forEachChild([&] (IBlockInputStream & child)
+    forEachChild([&] (IInputStream & child)
     {
         child.cancel(kill);
         return false;
@@ -63,12 +63,12 @@ void IBlockInputStream::cancel(bool kill)
 }
 
 
-bool IBlockInputStream::isCancelled() const
+bool IInputStream::isCancelled() const
 {
     return is_cancelled;
 }
 
-bool IBlockInputStream::isCancelledOrThrowIfKilled() const
+bool IInputStream::isCancelledOrThrowIfKilled() const
 {
     if (!is_cancelled)
         return false;
