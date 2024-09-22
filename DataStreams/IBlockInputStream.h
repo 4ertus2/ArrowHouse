@@ -30,9 +30,6 @@ public:
     IBlockInputStream(const IBlockInputStream &) = delete;
     IBlockInputStream & operator=(const IBlockInputStream &) = delete;
 
-    /// To output the data stream transformation tree (query execution plan).
-    virtual String getName() const = 0;
-
     /** Get data structure of the stream in a form of "header" block (it is also called "sample block").
       * Header block contains column names, data types, columns of size 0. Constant columns must have corresponding values.
       * It is guaranteed that method "read" returns blocks of exactly that structure.

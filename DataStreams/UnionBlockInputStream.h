@@ -59,8 +59,6 @@ public:
 #endif
     }
 
-    String getName() const override { return "Union"; }
-
     ~UnionBlockInputStream() override
     {
         try

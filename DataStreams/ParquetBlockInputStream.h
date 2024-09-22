@@ -16,7 +16,6 @@ public:
         const parquet::ReaderProperties & parquet_reader_properties = parquet::default_reader_properties(),
         const parquet::ArrowReaderProperties & arrow_reader_ptoretries = parquet::default_arrow_reader_properties());
 
-    String getName() const override { return "ParquetArrow"; }
     Header getHeader() const override { return header; }
 
 protected:

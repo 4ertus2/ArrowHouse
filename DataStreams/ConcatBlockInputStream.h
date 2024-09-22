@@ -18,8 +18,6 @@ public:
         current_stream = children.begin();
     }
 
-    String getName() const override { return "Concat"; }
-
     Header getHeader() const override { return children.at(0)->getHeader(); }
 
     /// We call readSuffix prematurely by ourself. Suppress default behaviour.

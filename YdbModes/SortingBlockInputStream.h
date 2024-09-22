@@ -21,7 +21,6 @@ public:
         children.push_back(input_);
     }
 
-    String getName() const override { return "Sorting"; }
     Header getHeader() const override { return children.at(0)->getHeader(); }
 
 protected:

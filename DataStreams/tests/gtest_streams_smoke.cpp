@@ -31,7 +31,6 @@ TEST(StreamSmoke, NullBlockInputStream)
 {
     std::shared_ptr<arrow::RecordBatch> batch = TestBatch();
     NullBlockInputStream stream(batch->schema());
-    EXPECT_EQ(stream.getName(), "Null");
     EXPECT_EQ(stream.read().get(), nullptr);
 }
 
@@ -39,7 +38,6 @@ TEST(StreamSmoke, OneBlockInputStream)
 {
     std::shared_ptr<arrow::RecordBatch> batch = TestBatch();
     OneBlockInputStream stream(batch);
-    EXPECT_EQ(stream.getName(), "One");
     batch = stream.read();
 }
 
@@ -48,7 +46,6 @@ TEST(StreamSmoke, BlocksListBlockInputStream)
     std::shared_ptr<arrow::RecordBatch> src_batch = TestBatch();
 
     auto list = std::make_shared<BlocksListBlockInputStream>(AH::BlocksList{src_batch, src_batch});
-    EXPECT_EQ(list->getName(), "BlocksList");
 
     while (auto batch = list->read())
         EXPECT_EQ(batch.get(), src_batch.get());
@@ -63,7 +60,6 @@ TEST(StreamSmoke, ConcatBlockInputStream)
            std::make_shared<OneBlockInputStream>(src_batch)};
 
     auto concat = std::make_shared<ConcatBlockInputStream>(streams);
-    EXPECT_EQ(concat->getName(), "Concat");
 
     for (size_t i = 0; i < streams.size(); ++i)
     {
@@ -79,7 +75,6 @@ TEST(StreamSmoke, FilterColumnsBlockInputStream)
 
     std::vector<std::string> names = {"int64"};
     auto proj = std::make_shared<FilterColumnsBlockInputStream>(stream, names, true);
-    EXPECT_EQ(proj->getName(), "FilterColumns");
 
     auto batch = proj->read();
     EXPECT_NE(batch.get(), nullptr);
@@ -136,7 +131,6 @@ TEST(StreamSmoke, ExpressionBlockInputStream)
     auto ssa = std::make_shared<AHY::Program>(std::vector<std::shared_ptr<AHY::ProgramStep>>{ssa_step});
 
     auto expression = std::make_shared<AHY::ExpressionBlockInputStream>(one, ssa);
-    EXPECT_EQ(expression->getName(), "SSA");
     auto res = expression->read();
     EXPECT_EQ(res->num_columns(), 2);
     EXPECT_EQ(res->num_rows(), 10);
@@ -153,7 +147,6 @@ TEST(StreamSmoke, UnionBlockInputStream)
         streams.push_back(std::make_shared<OneBlockInputStream>(src_batch));
 
     auto union_stream = std::make_shared<UnionBlockInputStream>(streams, 16);
-    EXPECT_EQ(union_stream->getName(), "Union");
 
     while (auto batch = union_stream->read())
         EXPECT_EQ(batch.get(), src_batch.get());

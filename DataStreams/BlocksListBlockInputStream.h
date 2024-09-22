@@ -18,8 +18,6 @@ public:
     /// Uses a list of blocks lying somewhere else.
     BlocksListBlockInputStream(BlocksList::iterator & begin_, BlocksList::iterator & end_) : it(begin_), end(end_) { }
 
-    String getName() const override { return "BlocksList"; }
-
 protected:
     Header getHeader() const override { return list.empty() ? nullptr : (*list.begin())->schema(); }
 

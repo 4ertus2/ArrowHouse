@@ -23,8 +23,6 @@ public:
             throw Exception(std::string("Bad batch in OneBlockInputStream: ") + status.ToString());
     }
 
-    String getName() const override { return "One"; }
-
     Header getHeader() const override
     {
         if (!block)
