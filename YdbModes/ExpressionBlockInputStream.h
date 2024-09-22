@@ -22,7 +22,6 @@ public:
 
     ExpressionBlockInputStream(const BlockInputStreamPtr & input, ProgramPtr ssa_);
 
-    String getName() const override { return "SSA"; }
     Header getHeader() const override { return cached_header; }
 
 protected:

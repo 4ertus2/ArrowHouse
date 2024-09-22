@@ -11,7 +11,6 @@ class ReverseBlockInputStream : public IBlockInputStream
 public:
     ReverseBlockInputStream(const BlockInputStreamPtr & input);
 
-    String getName() const override { return "Reverse"; }
     Header getHeader() const override { return children.at(0)->getHeader(); }
 
 protected:

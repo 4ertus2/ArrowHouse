@@ -244,7 +244,6 @@ public:
         children = inputs_;
     }
 
-    String getName() const override { return "ParallelInputsStream"; }
     Header getHeader() const override { return children[0]->getHeader(); }
 
     Block readImpl() override

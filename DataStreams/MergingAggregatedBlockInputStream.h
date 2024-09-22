@@ -23,8 +23,6 @@ public:
         children.push_back(input);
     }
 
-    String getName() const override { return "MergingAggregated"; }
-
     Header getHeader() const override;
 
 protected:

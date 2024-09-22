@@ -30,7 +30,6 @@ public:
         children.push_back(input);
     }
 
-    String getName() const override { return "Aggregating"; }
     Header getHeader() const override;
 
 protected:

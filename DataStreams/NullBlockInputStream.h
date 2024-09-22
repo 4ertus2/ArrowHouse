@@ -13,7 +13,6 @@ public:
     NullBlockInputStream(const Header & header_) : header(header_) {}
 
     Header getHeader() const override { return header; }
-    String getName() const override { return "Null"; }
 
 private:
     Header header;

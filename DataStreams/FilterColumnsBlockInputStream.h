@@ -17,7 +17,6 @@ public:
         children.push_back(input);
     }
 
-    String getName() const override { return "FilterColumns"; }
     Header getHeader() const override;
 
 protected:

@@ -31,8 +31,6 @@ public:
         }
     }
 
-    String getName() const override { return "MergingAndConverting"; }
-
     Header getHeader() const override { return aggregator.getHeader(final); }
 
 protected:

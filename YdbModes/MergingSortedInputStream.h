@@ -30,7 +30,6 @@ public:
         bool slice = false);
     MergingSortedInputStream(const std::vector<Block> & blocks_, const SortDescription & description_, size_t max_merged_block_size_);
 
-    String getName() const override { return "MergingSorted"; }
     std::shared_ptr<arrow::Schema> getHeader() const override { return header; }
 
 protected:

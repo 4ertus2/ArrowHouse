@@ -17,7 +17,6 @@ class CheckSortedBlockInputStream : public IBlockInputStream
 public:
     CheckSortedBlockInputStream(const BlockInputStreamPtr & input_, const SortDescription & sort_description_);
 
-    String getName() const override { return "CheckSorted"; }
     Header getHeader() const override { return header; }
 
 protected:

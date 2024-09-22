@@ -17,7 +17,6 @@ public:
     MergeSortingBlockInputStream(const BlockInputStreamPtr & input, const SortDescription & description_,
         size_t max_merged_block_size_);
 
-    String getName() const override { return "MergeSorting"; }
     Header getHeader() const override { return header; }
 
 protected:
