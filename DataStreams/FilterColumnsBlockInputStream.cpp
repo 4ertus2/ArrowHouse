@@ -6,7 +6,7 @@ namespace AH
 
 Header FilterColumnsBlockInputStream::getHeader() const
 {
-    Header header = children.back()->getHeader();
+    Header header = IBlockInputStream::getHeader(children.back());
     return projection(header, columns_to_save, throw_if_column_not_found);
 }
 

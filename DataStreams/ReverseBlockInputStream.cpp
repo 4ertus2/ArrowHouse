@@ -3,14 +3,14 @@
 namespace AH
 {
 
-ReverseBlockInputStream::ReverseBlockInputStream(const BlockInputStreamPtr & input)
+ReverseBlockInputStream::ReverseBlockInputStream(const InputStreamPtr & input)
 {
     children.push_back(input);
 }
 
 Block ReverseBlockInputStream::readImpl()
 {
-    auto block = children.back()->read();
+    Block block = children.back()->read();
 
     if (!block || block->num_rows() < 2)
         return block;

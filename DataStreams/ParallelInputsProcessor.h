@@ -59,10 +59,10 @@ struct ParallelInput
         AFFINITY = 0x4,
     };
 
-    BlockInputStreamPtr stream;
+    InputStreamPtr stream;
     uint32_t flags = NONE;
 
-    ParallelInput(const BlockInputStreamPtr & in = {}, uint32_t flags_ = 0) : stream(in), flags(flags_) { }
+    ParallelInput(const InputStreamPtr & in = {}, uint32_t flags_ = 0) : stream(in), flags(flags_) { }
     ParallelInput(ParallelInput &&) = default;
     ParallelInput(const ParallelInput &) = delete;
     ParallelInput & operator=(ParallelInput &&) = default;
@@ -92,10 +92,10 @@ struct ParallelInput
 
 struct ParallelOutput
 {
-    BlockOutputStreamPtr stream;
+    OutputStreamPtr stream;
     uint32_t flags = ParallelInput::NONE;
 
-    ParallelOutput(const BlockOutputStreamPtr & out = {}, uint32_t flags_ = 0) : stream(out), flags(flags_) { }
+    ParallelOutput(const OutputStreamPtr & out = {}, uint32_t flags_ = 0) : stream(out), flags(flags_) { }
     ParallelOutput(ParallelOutput &&) = default;
     ParallelOutput(const ParallelOutput &) = delete;
     ParallelOutput & operator=(ParallelOutput &&) = delete;
@@ -128,7 +128,7 @@ class AvailableInputsQueue
 public:
     using Input = ParallelInput;
 
-    AvailableInputsQueue(const BlockInputStreams & inputs_, uint32_t flags)
+    AvailableInputsQueue(const InputStreams & inputs_, uint32_t flags)
     {
         for (size_t i = 0; i < inputs_.size(); ++i)
             inputs.emplace(inputs_[i], flags);
@@ -197,7 +197,7 @@ class AffinedInputs
 public:
     using Input = ParallelInput;
 
-    AffinedInputs(const BlockInputStreams & inputs_, AffinityMap & affinity_, uint32_t flags) : affinity(affinity_)
+    AffinedInputs(const InputStreams & inputs_, AffinityMap & affinity_, uint32_t flags) : affinity(affinity_)
     {
         inputs.reserve(inputs_.size());
         for (size_t i = 0; i < inputs_.size(); ++i)
@@ -226,7 +226,7 @@ public:
     static constexpr ptrdiff_t MAX_SEMA_1K = 1000;
     static constexpr bool need_affinity = std::is_same_v<TQueue, AffinedInputs>;
 
-    TParallelInputsStream(const BlockInputStreams & inputs_, uint32_t max_io_threads, uint32_t flags)
+    TParallelInputsStream(const InputStreams & inputs_, uint32_t max_io_threads, uint32_t flags)
     requires(!need_affinity)
         : queue(inputs_, flags), io_semaphore(max_io_threads)
     {
@@ -235,7 +235,7 @@ public:
         children = inputs_;
     }
 
-    TParallelInputsStream(const BlockInputStreams & inputs_, AffinityMap & affinity, uint32_t max_io_threads, uint32_t flags)
+    TParallelInputsStream(const InputStreams & inputs_, AffinityMap & affinity, uint32_t max_io_threads, uint32_t flags)
     requires(need_affinity)
         : queue(inputs_, affinity, flags), io_semaphore(max_io_threads)
     {
@@ -244,7 +244,7 @@ public:
         children = inputs_;
     }
 
-    Header getHeader() const override { return children[0]->getHeader(); }
+    Header getHeader() const override { return IBlockInputStream::getHeader(children[0]); }
 
     Block readImpl() override
     {
@@ -313,8 +313,8 @@ public:
         return {};
     }
 
-    static BlockInputStreamPtr makeInputsStream(
-        const BlockInputStreams & inputs_,
+    static InputStreamPtr makeInputsStream(
+        const InputStreams & inputs_,
         std::shared_ptr<AffinityMap> affinity,
         unsigned max_compute_threads,
         unsigned max_io_threads,
@@ -335,7 +335,7 @@ public:
     }
 
     ParallelInputsProcessor(
-        const BlockInputStreams & inputs_, unsigned max_compute_threads, unsigned max_io_threads, Handler & handler_, uint32_t flags = 0)
+        const InputStreams & inputs_, unsigned max_compute_threads, unsigned max_io_threads, Handler & handler_, uint32_t flags = 0)
         : affinity(makeAffinity(flags))
         , input(makeInputsStream(inputs_, affinity, max_compute_threads, max_io_threads, flags))
         , max_threads(max_compute_threads)
@@ -445,7 +445,7 @@ private:
     }
 
     std::shared_ptr<AffinityMap> affinity;
-    BlockInputStreamPtr input;
+    InputStreamPtr input;
     const unsigned max_threads;
     Handler & handler;
 

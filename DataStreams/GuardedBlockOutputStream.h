@@ -11,15 +11,15 @@ namespace AH
 class GuardedBlockOutputStream : public IBlockOutputStream
 {
 public:
-    GuardedBlockOutputStream(BlockOutputStreamPtr stream_) : stream(stream_) { }
+    GuardedBlockOutputStream(OutputStreamPtr stream_) : stream(stream_) { }
 
     Header getHeader() const override
     {
         std::lock_guard lock(mutex);
-        return stream->getHeader();
+        return IBlockOutputStream::getHeader(stream);
     }
 
-    void write(const Block & block) override
+    void write(const Clod & block) override
     {
         std::lock_guard lock(mutex);
         stream->write(block);
@@ -44,7 +44,7 @@ public:
     }
 
 private:
-    BlockOutputStreamPtr stream;
+    OutputStreamPtr stream;
     mutable std::mutex mutex;
 };
 

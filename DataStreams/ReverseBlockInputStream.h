@@ -9,9 +9,9 @@ namespace AH
 class ReverseBlockInputStream : public IBlockInputStream
 {
 public:
-    ReverseBlockInputStream(const BlockInputStreamPtr & input);
+    ReverseBlockInputStream(const InputStreamPtr & input);
 
-    Header getHeader() const override { return children.at(0)->getHeader(); }
+    Header getHeader() const override { return IBlockInputStream::getHeader(children.at(0)); }
 
 protected:
     Block readImpl() override;

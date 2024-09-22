@@ -3,9 +3,9 @@
 // See: https://github.com/ClickHouse/ClickHouse/
 
 #pragma once
-#include "arrow_clickhouse_types.h"
-#include "Aggregator.h"
 #include <DataStreams/IBlockInputStream.h>
+#include "Aggregator.h"
+#include "arrow_clickhouse_types.h"
 
 
 namespace AH
@@ -17,7 +17,7 @@ namespace AH
 class MergingAggregatedBlockInputStream : public IBlockInputStream
 {
 public:
-    MergingAggregatedBlockInputStream(const BlockInputStreamPtr & input, const Aggregator::Params & params, bool final_)
+    MergingAggregatedBlockInputStream(const InputStreamPtr & input, const Aggregator::Params & params, bool final_)
         : aggregator(params), final(final_)
     {
         children.push_back(input);

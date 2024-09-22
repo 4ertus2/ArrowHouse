@@ -15,7 +15,7 @@ using namespace AH;
 class CheckSortedBlockInputStream : public IBlockInputStream
 {
 public:
-    CheckSortedBlockInputStream(const BlockInputStreamPtr & input_, const SortDescription & sort_description_);
+    CheckSortedBlockInputStream(const InputStreamPtr & input_, const SortDescription & sort_description_);
 
     Header getHeader() const override { return header; }
 

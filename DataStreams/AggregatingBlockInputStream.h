@@ -5,9 +5,9 @@
 #pragma once
 #include "arrow_clickhouse_types.h"
 
-#include "Aggregator.h"
-#include <DataStreams/IBlockStream_fwd.h>
 #include <DataStreams/IBlockInputStream.h>
+#include <DataStreams/IBlockStream_fwd.h>
+#include "Aggregator.h"
 
 namespace AH
 {
@@ -24,7 +24,7 @@ public:
       * Aggregate functions are searched everywhere in the expression.
       * Columns corresponding to keys and arguments of aggregate functions must already be computed.
       */
-    AggregatingBlockInputStream(const BlockInputStreamPtr & input, const Aggregator::Params & params_, bool final_)
+    AggregatingBlockInputStream(const InputStreamPtr & input, const Aggregator::Params & params_, bool final_)
         : params(params_), aggregator(params), final(final_)
     {
         children.push_back(input);
@@ -41,7 +41,7 @@ protected:
 
     bool executed = false;
 
-     /** From here we will get the completed blocks after the aggregation. */
+    /** From here we will get the completed blocks after the aggregation. */
     std::unique_ptr<IBlockInputStream> impl;
 };
 

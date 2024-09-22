@@ -20,7 +20,7 @@ class ExpressionBlockInputStream : public IBlockInputStream
 public:
     using ProgramPtr = std::shared_ptr<Program>;
 
-    ExpressionBlockInputStream(const BlockInputStreamPtr & input, ProgramPtr ssa_);
+    ExpressionBlockInputStream(const InputStreamPtr & input, ProgramPtr ssa_);
 
     Header getHeader() const override { return cached_header; }
 

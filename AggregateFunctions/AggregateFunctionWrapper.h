@@ -81,10 +81,10 @@ public:
         agg_params.has_nullable_key = has_nullable_key;
         AggregatingBlockInputStream agg_stream(input_stream, agg_params, true);
 
-        auto result_batch = agg_stream.read();
+        Block result_batch = agg_stream.read();
         if (!result_batch || result_batch->num_rows() != 1)
             return arrow::Status::Invalid("unexpected arrgerate result");
-        if (agg_stream.read())
+        if (Block another = agg_stream.read(); another)
             return arrow::Status::Invalid("unexpected second batch in aggregate result");
 
         auto res_column = result_batch->GetColumnByName(result_name);
@@ -239,10 +239,10 @@ public:
         agg_params.has_nullable_key = opts->has_nullable_key;
         AggregatingBlockInputStream agg_stream(input_stream, agg_params, true);
 
-        auto result_batch = agg_stream.read();
+        Block result_batch = agg_stream.read();
         if (!result_batch || (batch->num_rows() && !result_batch->num_rows()))
             return arrow::Status::Invalid("unexpected arrgerate result");
-        if (agg_stream.read())
+        if (Block another = agg_stream.read(); another)
             return arrow::Status::Invalid("unexpected second batch in aggregate result");
 
         return arrow::Result<arrow::Datum>(result_batch);

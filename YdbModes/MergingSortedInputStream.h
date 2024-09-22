@@ -24,7 +24,7 @@ class MergingSortedInputStream : public IBlockInputStream
 {
 public:
     MergingSortedInputStream(
-        const std::vector<BlockInputStreamPtr> & inputs,
+        const std::vector<InputStreamPtr> & inputs,
         std::shared_ptr<ReplaceSortDescription> description,
         size_t maxBatchRows,
         bool slice = false);

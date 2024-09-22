@@ -38,10 +38,7 @@ public:
     using ExceptionCallback = std::function<void()>;
 
     UnionBlockInputStream(
-        BlockInputStreams inputs,
-        unsigned max_threads,
-        unsigned max_io_threads = 0,
-        ExceptionCallback exception_callback_ = ExceptionCallback())
+        InputStreams inputs, unsigned max_threads, unsigned max_io_threads = 0, ExceptionCallback exception_callback_ = ExceptionCallback())
         : output_queue(std::min(inputs.size(), (size_t)max_threads))
         , handler(*this)
         , processor(inputs, max_threads, max_io_threads, handler)
@@ -91,7 +88,7 @@ public:
         processor.cancel(kill);
     }
 
-    Header getHeader() const override { return children.at(0)->getHeader(); }
+    Header getHeader() const override { return IBlockInputStream::getHeader(children.at(0)); }
 
 protected:
     void finalize()

@@ -12,7 +12,7 @@ using namespace AH;
 class SortingBlockInputStream : public IBlockInputStream
 {
 public:
-    SortingBlockInputStream(const BlockInputStreamPtr & input_, const SortDescription & description_)
+    SortingBlockInputStream(const InputStreamPtr & input_, const SortDescription & description_)
         : description(description_)
     {
         for (auto & col_descr : description)
@@ -21,7 +21,7 @@ public:
         children.push_back(input_);
     }
 
-    Header getHeader() const override { return children.at(0)->getHeader(); }
+    Header getHeader() const override { return IBlockInputStream::getHeader(children.at(0)); }
 
 protected:
     Block readImpl() override;

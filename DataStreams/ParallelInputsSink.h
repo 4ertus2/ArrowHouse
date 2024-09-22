@@ -57,13 +57,13 @@ public:
     };
 
     static void copyNToOne(
-        const BlockInputStreams & inputs,
-        BlockOutputStreamPtr output,
+        const InputStreams & inputs,
+        OutputStreamPtr output,
         uint32_t max_compute_threads = 1,
         uint32_t max_io_threads = 0,
         ProgressCallback progress = {})
     {
-        BlockOutputStreamPtr mt_output = std::make_shared<GuardedBlockOutputStream>(output);
+        OutputStreamPtr mt_output = std::make_shared<GuardedBlockOutputStream>(output);
 
         constexpr uint32_t flags = ParallelInput::PREFIX | ParallelInput::SUFFIX;
         ParallelInputsSink sink(inputs, mt_output, max_compute_threads, max_io_threads, flags, progress);
@@ -71,8 +71,7 @@ public:
         sink.finalize();
     }
 
-    static void
-    copyNToN(const BlockInputStreams & inputs, BlockOutputStreams & outputs, unsigned max_threads = 0, ProgressCallback progress = {})
+    static void copyNToN(const InputStreams & inputs, OutputStreams & outputs, unsigned max_threads = 0, ProgressCallback progress = {})
     {
         constexpr uint32_t flags = ParallelInput::PREFIX | ParallelInput::SUFFIX | ParallelInput::AFFINITY;
         max_threads = max_threads ? max_threads : inputs.size();
@@ -82,8 +81,8 @@ public:
     }
 
     ParallelInputsSink(
-        const BlockInputStreams & inputs,
-        BlockOutputStreamPtr mt_output,
+        const InputStreams & inputs,
+        OutputStreamPtr mt_output,
         uint32_t max_compute_threads,
         uint32_t max_io_threads = 0,
         uint32_t flags = 0,
@@ -119,7 +118,7 @@ private:
     std::exception_ptr exception;
 
     ParallelInputsSink(
-        const BlockInputStreams & inputs, BlockOutputStreams & outputs_, unsigned max_threads, uint32_t flags, ProgressCallback progress = {})
+        const InputStreams & inputs, OutputStreams & outputs_, unsigned max_threads, uint32_t flags, ProgressCallback progress = {})
         : handler(*this, progress), processor(inputs, max_threads, max_threads, handler, flags)
     {
         outputs.reserve(outputs_.size());

@@ -6,12 +6,12 @@
 namespace AH
 {
 
-class IBlockInputStream;
-class IBlockOutputStream;
+class IInputStream;
+class IOutputStream;
 
-using BlockInputStreamPtr = std::shared_ptr<IBlockInputStream>;
-using BlockInputStreams = std::vector<BlockInputStreamPtr>;
-using BlockOutputStreamPtr = std::shared_ptr<IBlockOutputStream>;
-using BlockOutputStreams = std::vector<BlockOutputStreamPtr>;
+using InputStreamPtr = std::shared_ptr<IInputStream>;
+using InputStreams = std::vector<InputStreamPtr>;
+using OutputStreamPtr = std::shared_ptr<IOutputStream>;
+using OutputStreams = std::vector<OutputStreamPtr>;
 
 }
