@@ -403,7 +403,7 @@ struct IntHash32
 };
 
 template <>
-struct DefaultHash<AH::StringRef> : public AH::StringRefHash
+struct DefaultHash<StringRef> : public StringRefHash
 {
 };
 

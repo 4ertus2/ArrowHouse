@@ -33,7 +33,6 @@ enum class OverflowMode
     ANY = 2,
 };
 
-using Exception = std::runtime_error;
 using ColumnNumbers = std::vector<uint32_t>; // it's vector<size_t> in CH
 using Names = std::vector<std::string>;
 
@@ -140,17 +139,6 @@ using DataTypeDecimal = arrow::DecimalType;
 
 class IAggregateFunction;
 using AggregateFunctionPtr = std::shared_ptr<const IAggregateFunction>;
-
-struct AggregateDescription
-{
-    AggregateFunctionPtr function;
-    Array parameters; /// Parameters of the (parametric) aggregate function.
-    ColumnNumbers arguments;
-    Names argument_names; /// used if no `arguments` are specified.
-    String column_name; /// What name to use for a column with aggregate function values
-};
-
-using AggregateDescriptions = std::vector<AggregateDescription>;
 
 using AggregateColumnsData = std::vector<arrow::UInt64Builder *>;
 using AggregateColumnsConstData = std::vector<const arrow::UInt64Array *>;

@@ -4,7 +4,7 @@
 
 #pragma once
 #include <DataStreams/IBlockInputStream.h>
-#include "Aggregator.h"
+#include <Interpreters/Aggregator.h>
 #include "arrow_clickhouse_types.h"
 
 

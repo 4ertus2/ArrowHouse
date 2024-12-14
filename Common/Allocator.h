@@ -24,7 +24,7 @@
 #include <stdexcept>
 
 #include <common/mremap.h>
-//#include <common/getPageSize.h>
+#include <common/getPageSize.h>
 
 #include <Common/Allocator_fwd.h>
 
@@ -35,9 +35,6 @@
 
 namespace AH
 {
-
-/// Get memory page size
-int64_t getPageSize();
 
 /**
   * Many modern allocators (for example, tcmalloc) do not do a mremap for

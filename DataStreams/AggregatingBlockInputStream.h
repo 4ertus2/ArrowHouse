@@ -7,7 +7,7 @@
 
 #include <DataStreams/IBlockInputStream.h>
 #include <DataStreams/IBlockStream_fwd.h>
-#include "Aggregator.h"
+#include <Interpreters/Aggregator.h>
 
 namespace AH
 {

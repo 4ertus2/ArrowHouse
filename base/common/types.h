@@ -26,6 +26,9 @@ using UInt16 = uint16_t;
 using UInt32 = uint32_t;
 using UInt64 = uint64_t;
 
+using Float32 = float;
+using Float64 = double;
+
 using String = std::string;
 
 }

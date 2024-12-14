@@ -5,6 +5,7 @@
 #pragma once
 #include "arrow_clickhouse_types.h"
 #include <DataStreams/IBlockInputStream.h>
+#include <Common/Exception.h>
 
 namespace AH
 {
