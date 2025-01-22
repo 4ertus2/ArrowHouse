@@ -19,7 +19,7 @@ public:
         return IBlockOutputStream::getHeader(stream);
     }
 
-    void write(const Clod & block) override
+    void write(const Block & block) override
     {
         std::lock_guard lock(mutex);
         stream->write(block);

@@ -15,7 +15,7 @@ class NullBlockOutputStream : public IBlockOutputStream
 public:
     NullBlockOutputStream(const Header & header_) : header(header_) { }
     Header getHeader() const override { return header; }
-    void write(const Clod &) override { }
+    void write(const Block &) override { }
 
 private:
     Header header;

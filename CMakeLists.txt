@@ -14,7 +14,7 @@ set(CMAKE_CXX_STANDARD 23)
 set(PEDANTIC "-Werror -Wall -Wextra -Wunreachable-code -Wpointer-arith")
 set(IGNORES "-Wno-unused-parameter")
 set(MUTED_ERRORS "-Wno-error=redundant-move -Wno-error=deprecated-declarations -Wno-error=array-bounds \
-  -Wno-error=missing-field-initializers -Wno-error=ignored-attributes")
+  -Wno-error=missing-field-initializers -Wno-error=ignored-attributes -Wno-deprecated-declarations")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pipe -fno-omit-frame-pointer ${PEDANTIC} ${IGNORES}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -fno-omit-frame-pointer ${PEDANTIC} ${MUTED_ERRORS} ${IGNORES}")
 
