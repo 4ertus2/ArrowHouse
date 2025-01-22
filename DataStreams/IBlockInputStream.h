@@ -21,6 +21,7 @@ namespace AH
   * Lets you get information for profiling: rows per second, blocks per second, megabytes per second, etc.
   * Allows you to stop reading data (in nested sources).
   */
+template <typename T>
 class IInputStream
 {
 public:
@@ -35,7 +36,7 @@ public:
       * NOTE: Only one thread can read from one instance of IBlockInputStream simultaneously.
       * This also applies for readPrefix, readSuffix.
       */
-    Clod read();
+    std::shared_ptr<T> read();
 
     /** Read something before starting all data or after the end of all data.
       * In the `readSuffix` function, you can implement a finalization that can lead to an exception.
@@ -83,7 +84,7 @@ protected:
 
 private:
     /// Derived classes must implement this function.
-    virtual Block readImpl() = 0;
+    virtual std::shared_ptr<T> readImpl() = 0;
 
     /// Here you can do a preliminary initialization.
     virtual void readPrefixImpl() { }
@@ -108,7 +109,7 @@ private:
 };
 
 
-class IBlockInputStream : public IInputStream
+class IBlockInputStream : public IInputStream<arrow::RecordBatch>
 {
 public:
     IBlockInputStream() { }

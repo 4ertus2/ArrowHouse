@@ -10,18 +10,18 @@ namespace AH
 
 /// It's safe to access children without mutex as long as these methods are called before first call to `read()` or `readPrefix()`.
 
-
-Clod IInputStream::read()
+template <typename T>
+std::shared_ptr<T> IInputStream<T>::read()
 {
-    Block res;
     if (isCancelledOrThrowIfKilled())
-        return res;
+        return {};
 
     return readImpl();
 }
 
 
-void IInputStream::readPrefix()
+template <typename T>
+void IInputStream<T>::readPrefix()
 {
     readPrefixImpl();
 
@@ -33,7 +33,8 @@ void IInputStream::readPrefix()
 }
 
 
-void IInputStream::readSuffix()
+template <typename T>
+void IInputStream<T>::readSuffix()
 {
     forEachChild([&] (IInputStream & child)
     {
@@ -45,7 +46,8 @@ void IInputStream::readSuffix()
 }
 
 
-void IInputStream::cancel(bool kill)
+template <typename T>
+void IInputStream<T>::cancel(bool kill)
 {
 #if 0
     if (kill)
@@ -63,16 +65,22 @@ void IInputStream::cancel(bool kill)
 }
 
 
-bool IInputStream::isCancelled() const
+template <typename T>
+bool IInputStream<T>::isCancelled() const
 {
     return is_cancelled;
 }
 
-bool IInputStream::isCancelledOrThrowIfKilled() const
+
+template <typename T>
+bool IInputStream<T>::isCancelledOrThrowIfKilled() const
 {
     if (!is_cancelled)
         return false;
     return true;
 }
+
+
+template class IInputStream<arrow::RecordBatch>;
 
 }

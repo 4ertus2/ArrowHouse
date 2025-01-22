@@ -171,17 +171,6 @@ inline Block blockFromHeader(const Header & schema, size_t num_rows = 0)
     return arrow::RecordBatch::Make(schema, num_rows, columnsFromHeader(schema, num_rows));
 }
 
-struct Clod
-{
-    Block block;
-
-    Clod() = default;
-    Clod(const Block & block_) : block(block_) { }
-    Clod(Block && block_) : block(std::move(block_)) { }
-
-    operator Block() { return block; }
-};
-
 template <typename To, typename From>
 inline To assert_cast(From && from)
 {

@@ -13,6 +13,7 @@ namespace AH
 
 /** Interface of stream for writing data
   */
+template <typename T>
 class IOutputStream
 {
 public:
@@ -24,7 +25,7 @@ public:
 
     /** Write block.
       */
-    virtual void write(const Clod & block) = 0;
+    virtual void write(const std::shared_ptr<T> & block) = 0;
 
     /** Write or do something before all data or after all data.
       */
@@ -37,7 +38,7 @@ public:
 };
 
 
-class IBlockOutputStream : public IOutputStream
+class IBlockOutputStream : public IOutputStream<arrow::RecordBatch>
 {
 public:
     IBlockOutputStream() { }
